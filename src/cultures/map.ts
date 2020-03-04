@@ -5,7 +5,7 @@ import * as parsers from './map_sections/index';
 
 type MapSectionName = keyof typeof parsers;
 
-interface CulturesMap {
+export interface CulturesMap {
   width: number;
   height: number;
   elevation: Uint8Array;

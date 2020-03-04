@@ -1,8 +1,11 @@
 import { load_shader, createShader, createProgram } from "../../utils/webgl";
 
+const vertexShaderUrl = require('../../shaders/ground/vertex.glsl');
+const fragmentShaderUrl = require('../../shaders/ground/fragment.glsl');
+
 export async function init_program(gl: WebGL2RenderingContext) {
-  const vertexShaderSource = await load_shader("shaders/vertex.glsl");
-  const fragmentShaderSource = await load_shader("shaders/fragment.glsl");
+  const vertexShaderSource = await load_shader(vertexShaderUrl);
+  const fragmentShaderSource = await load_shader(fragmentShaderUrl);
 
   // create GLSL shaders, upload the GLSL source, compile the shaders
   var vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
@@ -16,12 +19,14 @@ export async function init_program(gl: WebGL2RenderingContext) {
   const program = createProgram(gl, vertexShader, fragmentShader);
   const a_position = gl.getAttribLocation(program, "a_position");
   const a_texcoord = gl.getAttribLocation(program, "a_texcoord");
+  const u_matrix = gl.getUniformLocation(program, "u_matrix");
 
   return {
     program,
     locations: {
       a_position,
-      a_texcoord
+      a_texcoord,
+      u_matrix
     }
   }
 }
@@ -53,13 +58,15 @@ export function define_texture(image: ImageData, depth: number, gl: WebGL2Render
   gl.texImage3D(
     gl.TEXTURE_2D_ARRAY,
     0,
-    gl.RGB,
+    gl.RGBA,
     image.width,
     image.height / depth,
     depth,
     0,
-    gl.RGB,
+    gl.RGBA,
     gl.UNSIGNED_BYTE,
     image.data
   );
+
+  return texture;
 }

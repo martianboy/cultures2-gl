@@ -1,6 +1,7 @@
 import { CulturesFS } from "../cultures/fs";
 import { CulturesRegistry } from "../cultures/registry";
 import { pcx_read } from './pcx';
+import { read_map_data } from './map';
 
 export class CulturesResourceManager {
   fs: CulturesFS;
@@ -47,5 +48,10 @@ export class CulturesResourceManager {
       paths,
       image: result
     };
+  }
+
+  async load_map(path: string) {
+    const blob = this.fs.open(path);
+    return read_map_data(blob);
   }
 }

@@ -1,6 +1,7 @@
 import { CulturesFS } from "../cultures/fs";
 import { load_registry } from "../cultures/registry";
 import { CulturesResourceManager } from '../cultures/resource_manager';
+import { load_map } from './map';
 
 export async function createGame(fs: CulturesFS, canvas: HTMLCanvasElement) {
   const registry = await load_registry(fs);
@@ -14,6 +15,8 @@ export async function createGame(fs: CulturesFS, canvas: HTMLCanvasElement) {
     console.warn('Context creation failed.');
     return;
   }
+
+  await load_map('data\\maps\\campaign_01_01\\map.dat', gl, resource_manager);
 
   console.log('Game initialized...');
 }
