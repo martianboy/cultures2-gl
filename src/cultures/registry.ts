@@ -19,6 +19,10 @@ export class CulturesRegistry {
     this.animals = new Set();
   }
 
+  get pattern_files() {
+    return new Set(Array.from(this.patterns.values()).map(p => p.GfxTexture));
+  }
+
   async load_palettes() {
     const PATH = 'data\\engine2d\\inis\\palettes\\palettes.cif';
     const cif = await read_cif(this.fs.open(PATH));

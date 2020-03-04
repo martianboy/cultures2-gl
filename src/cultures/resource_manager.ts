@@ -24,4 +24,28 @@ export class CulturesResourceManager {
 
     return img_p;
   }
+
+  async load_all_patterns(): Promise<{ paths: string[]; image: ImageData; }> {
+    const paths = Array.from(this.registry.pattern_files);
+
+    const images = await Promise.all(paths.map(path => {
+      const blob = this.fs.open(path);
+      return pcx_read(blob);
+    }));
+
+    const height = images.reduce((r, i) => r + i.height, 0);
+    const result = new ImageData(images[0].width, height);
+
+    let offset = 0;
+    for (const img of images) {
+      result.data.set(img.data, offset);
+      offset += img.data.byteLength;
+    }
+
+    
+    return {
+      paths,
+      image: result
+    };
+  }
 }

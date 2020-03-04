@@ -1,0 +1,65 @@
+import { load_shader, createShader, createProgram } from "../../utils/webgl";
+
+export async function init_program(gl: WebGL2RenderingContext) {
+  const vertexShaderSource = await load_shader("shaders/vertex.glsl");
+  const fragmentShaderSource = await load_shader("shaders/fragment.glsl");
+
+  // create GLSL shaders, upload the GLSL source, compile the shaders
+  var vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
+  var fragmentShader = createShader(
+    gl,
+    gl.FRAGMENT_SHADER,
+    fragmentShaderSource
+  );
+
+  // Link the two shaders into a program
+  const program = createProgram(gl, vertexShader, fragmentShader);
+  const a_position = gl.getAttribLocation(program, "a_position");
+  const a_texcoord = gl.getAttribLocation(program, "a_texcoord");
+
+  return {
+    program,
+    locations: {
+      a_position,
+      a_texcoord
+    }
+  }
+}
+
+export function load_float_array(buf: Float32Array, location: number, size: number, gl: WebGL2RenderingContext) {
+  let positionBuffer = gl.createBuffer();
+  gl.enableVertexAttribArray(location);
+  gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+
+  gl.bufferData(gl.ARRAY_BUFFER, buf, gl.STATIC_DRAW);
+  gl.vertexAttribPointer(
+      location, size, gl.FLOAT, false, 0, 0);
+}
+
+export function define_texture(image: ImageData, depth: number, gl: WebGL2RenderingContext) {
+  // Create a texture.
+  var texture = gl.createTexture();
+
+  // use texture unit 0
+  gl.activeTexture(gl.TEXTURE0 + 0);
+
+  // bind to the TEXTURE_2D bind point of texture unit 0
+  gl.bindTexture(gl.TEXTURE_2D_ARRAY, texture);
+  gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+  gl.texImage3D(
+    gl.TEXTURE_2D_ARRAY,
+    0,
+    gl.RGB,
+    image.width,
+    image.height / depth,
+    depth,
+    0,
+    gl.RGB,
+    gl.UNSIGNED_BYTE,
+    image.data
+  );
+}

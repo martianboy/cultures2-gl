@@ -5,6 +5,16 @@ import * as parsers from './map_sections/index';
 
 type MapSectionName = keyof typeof parsers;
 
+interface CulturesMap {
+  width: number;
+  height: number;
+  elevation: Uint8Array;
+  lighting: Uint8Array;
+  tiles_index: string[];
+  tiles_a: Uint16Array;
+  tiles_b: Uint16Array;
+}
+
 function read_header(view: SequentialDataView) {
   return {
     tag: view.sliceAsString(8) as MapSectionName,
@@ -17,7 +27,7 @@ function read_header(view: SequentialDataView) {
   };
 }
 
-export async function read_map_data(blob: Blob) {
+export async function read_map_data(blob: Blob): Promise<CulturesMap> {
   let pointer = 0;
   // @ts-ignore
   let sections: Record<MapSectionName, any> = {};
@@ -36,5 +46,13 @@ export async function read_map_data(blob: Blob) {
     pointer += header.section_length + 0x20;
   } while(pointer < blob.size);
 
-  return sections;
+  return {
+    width: sections.hoixzisl.content.width,
+    height: sections.hoixzisl.content.height,
+    elevation: sections.hoixehml.content.data,
+    lighting: sections.hoixrbme.content.data,
+    tiles_index: sections.hoixdpae.content.ground_types,
+    tiles_a: sections.hoixapme.content.data,
+    tiles_b: sections.hoixbpme.content.data,
+  };
 }

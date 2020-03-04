@@ -9,7 +9,8 @@ in vec2 a_texcoord;
 uniform mat4 u_matrix;
 
 // a varying to pass the texture coordinates to the fragment shader
-out vec2 v_texcoord;
+out vec3 v_texcoord;
+out float layer;
 
 // all shaders have a main function
 void main() {
@@ -17,5 +18,6 @@ void main() {
   gl_Position = u_matrix * a_position;
 
   // Pass the texcoord to the fragment shader.
-  v_texcoord = a_texcoord;
+  v_texcoord = a_texcoord.xy;
+  layer = a_texcoord.z;
 }

@@ -1,3 +1,6 @@
+import { CulturesResourceManager } from "../../cultures/resource_manager";
+import * as gl_helper from './gl';
+
 export function triA(x: number, y: number) {
   const off = (y % 2 === 1) ? -1 : 0;
 
@@ -29,4 +32,14 @@ export function triangulate_map(width: number, height: number) {
   }
 
   return map.flat();
+}
+
+export async function load_map(gl: WebGL2RenderingContext, rm: CulturesResourceManager) {
+  const img = await rm.load_all_patterns();
+
+  const { program, locations } = gl_helper.init_program(gl);
+
+  let vao = gl.createVertexArray();
+  gl.bindVertexArray(vao);
+
 }
