@@ -6,12 +6,13 @@ import { createGame } from "../../game";
 
 export const Game: React.FC<{
   fs: CulturesFS;
-}> = ({ fs }) => {
+  customMap?: CulturesFS;
+}> = ({ fs, customMap }) => {
   const canvasRef = useCallback((canvas: HTMLCanvasElement) => {
     if (canvas !== null) {
-      createGame(fs, canvas);
+      createGame(fs, canvas, customMap);
     }
-  }, [fs]);
+  }, [fs, customMap]);
 
   return <canvas ref={canvasRef}></canvas>;
 };

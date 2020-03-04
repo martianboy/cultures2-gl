@@ -10,10 +10,16 @@ function cancel(e: React.DragEvent<HTMLDivElement>) {
 
 function App() {
   const [fs, setFS] = useState<CulturesFS>();
+  const [customMap, setCustomMap] = useState<CulturesFS>();
 
   async function load_object_file(file: File) {
     const fs = await load_fs(file);
     setFS(fs);
+  }
+
+  async function load_custom_map(file: File) {
+    const fs = await load_fs(file);
+    setCustomMap(fs);
   }
 
   function onDrop(e: React.DragEvent<HTMLDivElement>) {
@@ -21,18 +27,21 @@ function App() {
 
     let files = e.dataTransfer.files;
 
-    if (!files[0].name.endsWith(".lib")) {
-      console.error("Unknown file type.");
-      return;
+    if (files[0].name.endsWith(".lib")) {
+      return load_object_file(files[0]);
     }
 
-    load_object_file(files[0]);
+    if (files[0].name.endsWith(".c2m")) {
+      return load_custom_map(files[0]);
+    }
+
+    console.error("Unknown file type.");
   }
 
   let canvas = null;
 
   if (fs) {
-    canvas = <Game fs={fs} />;
+    canvas = <Game fs={fs} customMap={customMap} />;
   }
 
   return (
