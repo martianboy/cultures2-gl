@@ -67,6 +67,7 @@ export function define_texture(image: ImageData, depth: number, gl: WebGL2Render
     gl.UNSIGNED_BYTE,
     image.data
   );
+  gl.generateMipmap(gl.TEXTURE_2D_ARRAY);
 
   return texture;
 }
