@@ -3,6 +3,18 @@ import { load_registry } from "../cultures/registry";
 import { CulturesResourceManager } from '../cultures/resource_manager';
 import { load_map, load_user_map } from './map';
 
+export class CulturesGame {
+  private fs: CulturesFS;
+  private resource_manager: CulturesResourceManager;
+  private canvas: HTMLCanvasElement;
+
+  constructor(fs: CulturesFS, canvas: HTMLCanvasElement, resource_manager: CulturesResourceManager) {
+    this.fs = fs;
+    this.resource_manager = resource_manager;
+    this.canvas = canvas;
+  }
+}
+
 export async function createGame(fs: CulturesFS, canvas: HTMLCanvasElement, custom_map?: CulturesFS) {
   const registry = await load_registry(fs);
   const resource_manager = new CulturesResourceManager(fs, registry);
@@ -10,16 +22,16 @@ export async function createGame(fs: CulturesFS, canvas: HTMLCanvasElement, cust
   canvas.width = document.documentElement.clientWidth;
   canvas.height = document.documentElement.clientHeight;
 
-  const gl = canvas.getContext('webgl2');
-  if (!gl) {
-    console.warn('Context creation failed.');
-    return;
-  }
+  // const gl = canvas.getContext('webgl2');
+  // if (!gl) {
+  //   console.warn('Context creation failed.');
+  //   return;
+  // }
 
   // if (custom_map) {
   //   await load_user_map(custom_map, gl, resource_manager);
   // }
-  await load_map('data\\maps\\campaign_01_01\\map.dat', gl, resource_manager);
+  // await load_map('data\\maps\\campaign_01_01\\map.dat', gl, resource_manager);
 
-  console.log('Game initialized...');
+  // console.log('Game initialized...');
 }

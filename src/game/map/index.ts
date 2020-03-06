@@ -26,12 +26,13 @@ export async function load_map(path: string, gl: WebGL2RenderingContext, rm: Cul
   const texture = gl_helper.define_texture(image, paths.length, gl);
 
   let translationMatrix = [0, 0, 0];
-  gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-  gl.clearColor(0, 0, 0, 0);
-  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
   // Draw
   function draw() {
+    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+    gl.clearColor(0, 0, 0, 0);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
     gl.useProgram(program);
     gl.bindVertexArray(vao);
 
