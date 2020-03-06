@@ -3,7 +3,8 @@
 // an attribute is an input (in) to a vertex shader.
 // It will receive data from a buffer
 in vec2 a_position;
-in vec3 a_texcoord;
+in vec2 a_texcoord;
+in float a_layer;
 
 // A matrix to transform the positions by
 uniform mat4 u_matrix;
@@ -18,6 +19,6 @@ void main() {
   gl_Position = u_matrix * vec4(a_position.xy, 1, 1);
 
   // Pass the texcoord to the fragment shader.
-  v_texcoord = a_texcoord.xy;
-  layer = a_texcoord.z;
+  v_texcoord = a_texcoord;
+  layer = a_layer;
 }

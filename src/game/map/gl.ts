@@ -19,6 +19,7 @@ export async function init_program(gl: WebGL2RenderingContext) {
   const program = createProgram(gl, vertexShader, fragmentShader);
   const a_position = gl.getAttribLocation(program, "a_position");
   const a_texcoord = gl.getAttribLocation(program, "a_texcoord");
+  const a_layer = gl.getAttribLocation(program, "a_layer");
   const u_matrix = gl.getUniformLocation(program, "u_matrix");
 
   return {
@@ -26,6 +27,7 @@ export async function init_program(gl: WebGL2RenderingContext) {
     locations: {
       a_position,
       a_texcoord,
+      a_layer,
       u_matrix
     }
   }
@@ -39,6 +41,16 @@ export function load_float_array(buf: Float32Array, location: number, size: numb
   gl.bufferData(gl.ARRAY_BUFFER, buf, gl.STATIC_DRAW);
   gl.vertexAttribPointer(
       location, size, gl.FLOAT, false, 0, 0);
+}
+
+export function load_uint8_array(buf: Uint8Array, location: number, size: number, gl: WebGL2RenderingContext) {
+  let positionBuffer = gl.createBuffer();
+  gl.enableVertexAttribArray(location);
+  gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+
+  gl.bufferData(gl.ARRAY_BUFFER, buf, gl.STATIC_DRAW);
+  gl.vertexAttribPointer(
+      location, size, gl.UNSIGNED_BYTE, false, 0, 0);
 }
 
 export function define_texture(image: ImageData, depth: number, gl: WebGL2RenderingContext) {

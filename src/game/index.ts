@@ -7,9 +7,8 @@ export async function createGame(fs: CulturesFS, canvas: HTMLCanvasElement, cust
   const registry = await load_registry(fs);
   const resource_manager = new CulturesResourceManager(fs, registry);
 
-  // const ofsc = new OffscreenCanvas(12000, 18000);
-  canvas.width = 3000;
-  canvas.height = 5000; // document.documentElement.clientHeight;
+  canvas.width = document.documentElement.clientWidth;
+  canvas.height = document.documentElement.clientHeight;
 
   const gl = canvas.getContext('webgl2');
   if (!gl) {
