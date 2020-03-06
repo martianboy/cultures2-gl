@@ -1,8 +1,8 @@
-import { CulturesMap } from "../../cultures/map";
+import { CulturesMapData } from "../../cultures/map";
 import { CulturesRegistry } from "../../cultures/registry";
 
 export function get_texture_buf(
-  map: CulturesMap,
+  map: CulturesMapData,
   paths: string[],
   registry: CulturesRegistry
 ): [Float32Array, Float32Array] {

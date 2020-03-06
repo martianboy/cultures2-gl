@@ -5,7 +5,7 @@ import * as parsers from './map_sections/index';
 
 type MapSectionName = keyof typeof parsers;
 
-export interface CulturesMap {
+export interface CulturesMapData {
   width: number;
   height: number;
   elevation: Uint8Array;
@@ -27,7 +27,7 @@ function read_header(view: SequentialDataView) {
   };
 }
 
-export async function read_map_data(blob: Blob): Promise<CulturesMap> {
+export async function read_map_data(blob: Blob): Promise<CulturesMapData> {
   let pointer = 0;
   // @ts-ignore
   let sections: Record<MapSectionName, any> = {};

@@ -18,6 +18,7 @@ function getState(ev: MouseEvent) {
   return draggables.get(ev.target as unknown as HTMLElement);
 }
 function mousedownHandler(ev: MouseEvent) {
+
   const state = getState(ev);
   if (!state) return;
 
@@ -34,8 +35,11 @@ function handleMouseMove(ev: MouseEvent) {
   const dx = ev.clientX - state.origin.x;
   const dy = ev.clientY - state.origin.y;
 
+  state.origin.x = ev.clientX;
+  state.origin.y = ev.clientY;
+
   state.translation = { dx, dy };
-  state.onDrag?.({ dx, dy });
+  if (state.onDrag) state.onDrag({ dx, dy });
 }
 	
 function handleMouseUp(ev: MouseEvent) {
@@ -59,7 +63,7 @@ function stopDragging(el: HTMLElement) {
   el.removeEventListener('mouseup', handleMouseUp);
 
   state.translation = { dx: 0, dy: 0 };
-  state.onDragEnd?.();
+  if (state.onDragEnd) state.onDragEnd();
 }
 
 export function draggable(el: HTMLElement, options: DraggableProps) {
@@ -74,8 +78,11 @@ export function draggable(el: HTMLElement, options: DraggableProps) {
     isDragging: false,
     origin: { x: 0, y: 0 },
     translation: { dx: 0, dy: 0 },
-    dispose
+    dispose,
+
+    ...options
   };
 
+  el.addEventListener("mousedown", mousedownHandler);
   draggables.set(el, new_draggable);
 }

@@ -24,10 +24,12 @@ export async function init_program(gl: WebGL2RenderingContext) {
 
   return {
     program,
-    locations: {
+    attrib_locations: {
       a_position,
       a_texcoord,
-      a_layer,
+      a_layer
+    }, 
+    uniform_locations: {
       u_matrix
     }
   }

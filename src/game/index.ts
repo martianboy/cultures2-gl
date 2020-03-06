@@ -22,16 +22,12 @@ export async function createGame(fs: CulturesFS, canvas: HTMLCanvasElement, cust
   canvas.width = document.documentElement.clientWidth;
   canvas.height = document.documentElement.clientHeight;
 
-  // const gl = canvas.getContext('webgl2');
-  // if (!gl) {
-  //   console.warn('Context creation failed.');
-  //   return;
-  // }
-
   // if (custom_map) {
   //   await load_user_map(custom_map, gl, resource_manager);
   // }
-  // await load_map('data\\maps\\campaign_01_01\\map.dat', gl, resource_manager);
+  const map = await load_map('data\\maps\\campaign_01_01\\map.dat', canvas, resource_manager);
+  map.render();
+  // setTimeout(() => map.stop(), 2000);
 
   // console.log('Game initialized...');
 }
