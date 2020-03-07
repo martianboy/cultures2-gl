@@ -5,6 +5,7 @@
 in vec2 a_position;
 in vec2 a_texcoord;
 in float a_layer;
+in float a_brightness;
 
 // A matrix to transform the positions by
 uniform mat4 u_matrix;
@@ -12,6 +13,7 @@ uniform mat4 u_matrix;
 // a varying to pass the texture coordinates to the fragment shader
 out vec2 v_texcoord;
 out float layer;
+out float brightness;
 
 // all shaders have a main function
 void main() {
@@ -21,4 +23,5 @@ void main() {
   // Pass the texcoord to the fragment shader.
   v_texcoord = a_texcoord;
   layer = a_layer;
+  brightness = a_brightness;
 }

@@ -22,11 +22,13 @@ export async function createGame(fs: CulturesFS, canvas: HTMLCanvasElement, cust
   canvas.width = document.documentElement.clientWidth;
   canvas.height = document.documentElement.clientHeight;
 
-  // if (custom_map) {
-  //   await load_user_map(custom_map, gl, resource_manager);
-  // }
-  const map = await load_map('data\\maps\\campaign_01_01\\map.dat', canvas, resource_manager);
-  map.render();
+  if (custom_map) {
+    const map = await load_user_map(custom_map, canvas, resource_manager);
+    map.render();
+  } else {
+    const map = await load_map('data\\maps\\campaign_01_01\\map.dat', canvas, resource_manager);
+    map.render();
+  }
   // setTimeout(() => map.stop(), 2000);
 
   // console.log('Game initialized...');

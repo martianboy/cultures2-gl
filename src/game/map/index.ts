@@ -14,6 +14,7 @@ interface IProgram {
     | 'a_position'
     | 'a_texcoord'
     | 'a_layer'
+    | 'a_brightness'
   , number>;
   uniform_locations: Record<'u_matrix', WebGLUniformLocation | null>;
 }
@@ -38,17 +39,18 @@ export class CulturesMap {
     this.gl.bindVertexArray(this.vao);
 
     const vertices = new Float32Array(
-      triangulate_map(this.map.width, this.map.height)
+      triangulate_map(this.map)
     );
     gl_helper.load_float_array(vertices, this.program.attrib_locations.a_position, 2, this.gl);
 
-    const [texcoords, layers] = get_texture_buf(
+    const [texcoords, brightness, layers] = get_texture_buf(
       this.map,
       paths,
       this.rm.registry
     );
     gl_helper.load_float_array(texcoords, this.program.attrib_locations.a_texcoord, 2, this.gl);
     gl_helper.load_float_array(layers, this.program.attrib_locations.a_layer, 1, this.gl);
+    gl_helper.load_float_array(brightness, this.program.attrib_locations.a_brightness, 1, this.gl);
 
     gl_helper.define_texture(image, paths.length, this.gl);
   }

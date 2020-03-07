@@ -20,6 +20,7 @@ export async function init_program(gl: WebGL2RenderingContext) {
   const a_position = gl.getAttribLocation(program, "a_position");
   const a_texcoord = gl.getAttribLocation(program, "a_texcoord");
   const a_layer = gl.getAttribLocation(program, "a_layer");
+  const a_brightness = gl.getAttribLocation(program, "a_brightness");
   const u_matrix = gl.getUniformLocation(program, "u_matrix");
 
   return {
@@ -27,7 +28,8 @@ export async function init_program(gl: WebGL2RenderingContext) {
     attrib_locations: {
       a_position,
       a_texcoord,
-      a_layer
+      a_layer,
+      a_brightness
     }, 
     uniform_locations: {
       u_matrix
