@@ -33,8 +33,6 @@ function triB(i: number, map_data: CulturesMapData) {
 function triACoords(i: number, w: number): [number, number, number] {
   let row = Math.floor(i / w);
 
-  if (i === 152) debugger;
-
   return [
     i,
     i + w + (row % 2),

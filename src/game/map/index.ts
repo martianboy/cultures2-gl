@@ -53,6 +53,13 @@ export class CulturesMap {
     gl_helper.load_float_array(brightness, this.program.attrib_locations.a_brightness, 1, this.gl);
 
     gl_helper.define_texture(image, paths.length, this.gl);
+
+    this.gl.viewport(0, 0, this.gl.canvas.width, this.gl.canvas.height);
+    this.gl.clearColor(0, 0, 0, 0);
+    this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
+
+    this.gl.useProgram(this.program.program);
+    this.gl.bindVertexArray(this.vao);
   }
 
   translate(dx: number, dy: number) {
@@ -61,14 +68,7 @@ export class CulturesMap {
   }
 
   render = () => {
-    this.gl.viewport(0, 0, this.gl.canvas.width, this.gl.canvas.height);
-    this.gl.clearColor(0, 0, 0, 0);
-    this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
-
-    this.gl.useProgram(this.program.program);
-    this.gl.bindVertexArray(this.vao);
-
-    let scaleFactor = 0.5;
+    let scaleFactor = 0.8;
     let size = 80 * scaleFactor;
 
     let matrix = m4.ortho(0, this.gl.canvas.width, this.gl.canvas.height, 0, -1, 1);
