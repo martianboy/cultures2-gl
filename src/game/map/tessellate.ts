@@ -5,15 +5,13 @@ function triA(i: number, map_data: CulturesMapData) {
   const x = Math.floor((i % (2 * map_data.width + 0)) / 2);
   const ei = y * map_data.width + x;
 
-  if (ei === 153) debugger;
-
   const off = y % 2;
   const elv = elevationAtTriA(ei, map_data);
 
   return [
-    2 * x + 0 + off, elv[0] + y - 1,
-    2 * x + 1 + off, elv[1] + y,
-    2 * x - 1 + off, elv[2] + y
+    2 * x + 0 + off, y - elv[0] - 1,
+    2 * x + 1 + off, y - elv[1],
+    2 * x - 1 + off, y - elv[2]
   ].map(x => x / 2);
 }
 
@@ -26,19 +24,21 @@ function triB(i: number, map_data: CulturesMapData) {
   const elv = elevationAtTriB(ei, map_data);
 
   return [
-    2 * x + 0 + off, elv[0] + y - 1,
-    2 * x + 2 + off, elv[1] + y - 1,
-    2 * x + 1 + off, elv[2] + y - 0
+    2 * x + 0 + off, y - elv[0] - 1,
+    2 * x + 2 + off, y - elv[1] - 1,
+    2 * x + 1 + off, y - elv[2] - 0
   ].map(x => x / 2);
 }
 
 function triACoords(i: number, w: number): [number, number, number] {
   let row = Math.floor(i / w);
 
+  if (i === 152) debugger;
+
   return [
-    i - w,
-    i + (row % 2),
-    i + (row % 2) - 1,
+    i,
+    i + w + (row % 2),
+    i + w + (row % 2) - 1,
   ];
 }
 
@@ -46,9 +46,9 @@ function triBCoords(i: number, w: number): [number, number, number] {
   let row = Math.floor(i / w);
 
   return [
-    i - w,
-    i - w + 1,
-    i + (row % 2),
+    i,
+    i + 1,
+    i + w + (row % 2),
   ];
 }
 
@@ -63,9 +63,9 @@ function elevationAtTriA(i: number, map_data: CulturesMapData): [number, number,
 
   const coords = triACoords(i, map_data.width);
   return [
-    elv[coords[0]] / 50,
-    elv[coords[1]] / 50,
-    elv[coords[2]] / 50,
+    elv[coords[0]] / 25,
+    elv[coords[1]] / 25,
+    elv[coords[2]] / 25,
   ];
 }
 
@@ -80,9 +80,9 @@ function elevationAtTriB(i: number, map_data: CulturesMapData): [number, number,
 
   const coords = triBCoords(i, map_data.width);
   return [
-    elv[coords[0]] / 50,
-    elv[coords[1]] / 50,
-    elv[coords[2]] / 50,
+    elv[coords[0]] / 25,
+    elv[coords[1]] / 25,
+    elv[coords[2]] / 25,
   ];
 }
 
