@@ -14,9 +14,13 @@ interface IProgram {
     | 'a_position'
     | 'a_texcoord'
     | 'a_layer'
+    | 'a_transcoord1'
+    | 'a_trans_layer1'
+    | 'a_transcoord2'
+    | 'a_trans_layer2'
     | 'a_brightness'
   , number>;
-  uniform_locations: Record<'u_matrix', WebGLUniformLocation | null>;
+  uniform_locations: Record<'u_matrix' | 'u_texture' | 'u_transition', WebGLUniformLocation | null>;
 }
 
 export class CulturesMap {
@@ -34,7 +38,8 @@ export class CulturesMap {
   }
 
   async initialize() {
-    const { image, paths } = await this.rm.load_all_patterns();
+    const { image: patterns, paths: pattern_paths } = await this.rm.load_all_patterns();
+    const { image: transitions, paths: transition_paths } = await this.rm.load_all_pattern_transitions();
 
     this.gl.bindVertexArray(this.vao);
 
@@ -43,16 +48,30 @@ export class CulturesMap {
     );
     gl_helper.load_float_array(vertices, this.program.attrib_locations.a_position, 2, this.gl);
 
-    const [texcoords, brightness, layers] = get_texture_buf(
+    const [
+      texcoords,
+      brightness,
+      layers,
+      trans_coords1,
+      transition_layers1,
+      trans_coords2,
+      transition_layers2,
+    ] = get_texture_buf(
       this.map,
-      paths,
+      pattern_paths,
+      transition_paths,
       this.rm.registry
     );
     gl_helper.load_float_array(texcoords, this.program.attrib_locations.a_texcoord, 2, this.gl);
     gl_helper.load_float_array(layers, this.program.attrib_locations.a_layer, 1, this.gl);
+    gl_helper.load_float_array(trans_coords1, this.program.attrib_locations.a_transcoord1, 2, this.gl);
+    gl_helper.load_float_array(transition_layers1, this.program.attrib_locations.a_trans_layer1, 1, this.gl);
+    gl_helper.load_float_array(trans_coords2, this.program.attrib_locations.a_transcoord2, 2, this.gl);
+    gl_helper.load_float_array(transition_layers2, this.program.attrib_locations.a_trans_layer2, 1, this.gl);
     gl_helper.load_float_array(brightness, this.program.attrib_locations.a_brightness, 1, this.gl);
 
-    gl_helper.define_texture(image, paths.length, this.gl);
+    const tex_patterns = gl_helper.define_texture(patterns, 0, pattern_paths.length, this.gl);
+    const tex_transitions1 = gl_helper.define_texture(transitions, 1, transition_paths.length, this.gl);
 
     this.gl.viewport(0, 0, this.gl.canvas.width, this.gl.canvas.height);
     this.gl.clearColor(0, 0, 0, 0);
@@ -60,6 +79,14 @@ export class CulturesMap {
 
     this.gl.useProgram(this.program.program);
     this.gl.bindVertexArray(this.vao);
+
+    this.gl.activeTexture(this.gl.TEXTURE0);
+    this.gl.bindTexture(this.gl.TEXTURE_2D_ARRAY, tex_patterns);
+    this.gl.uniform1i(this.program.uniform_locations.u_texture, 0);
+
+    this.gl.activeTexture(this.gl.TEXTURE1);
+    this.gl.bindTexture(this.gl.TEXTURE_2D_ARRAY, tex_transitions1);
+    this.gl.uniform1i(this.program.uniform_locations.u_transition, 1);
   }
 
   translate(dx: number, dy: number) {

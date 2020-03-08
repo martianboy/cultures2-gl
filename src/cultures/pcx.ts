@@ -72,7 +72,7 @@ export async function pcx_read_palette(blob: Blob) {
   return read_palette(view);
 }
 
-export async function pcx_read(blob: Blob): Promise<ImageData> {
+export async function pcx_read(blob: Blob, mask?: Blob): Promise<ImageData> {
   const buf = await read_file(blob);
   const view = new SequentialDataView(buf);
   const header = read_header(view);
@@ -89,12 +89,20 @@ export async function pcx_read(blob: Blob): Promise<ImageData> {
     throw new Error('Palette could not be found.');
   }
 
+  let alpha = new Uint8Array(width * height).fill(0xFF);
+  if (mask) {
+    const mask_buf = await read_file(mask);
+    const mask_view = new SequentialDataView(mask_buf);
+    mask_view.skip(0x80);
+    alpha = read_pixels(mask_view, width, height);
+  }
+
   const img = new ImageData(width, height);
   for (let i = 0; i < width * height; i++) {
     img.data[4 * i + 0] = palette[pixels[i]].red;
     img.data[4 * i + 1] = palette[pixels[i]].green;
     img.data[4 * i + 2] = palette[pixels[i]].blue;
-    img.data[4 * i + 3] = 0xFF;
+    img.data[4 * i + 3] = alpha[i];
   }
 
   return img;

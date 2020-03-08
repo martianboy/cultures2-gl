@@ -78,3 +78,12 @@ export const GfxHouse = {
   GfxFirePoint: '[number,number[][]]',
   GfxSmokePoint: '[number,number[][]]',
 }
+
+export const transition = {
+  name: 'string',
+  pointtype: 'string',
+  GfxTexture: 'string',
+  GfxTextureAlpha: 'string',
+  GfxCoordsA: 'number[][]',
+  GfxCoordsB: 'number[][]',
+}

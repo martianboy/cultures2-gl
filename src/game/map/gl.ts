@@ -19,20 +19,33 @@ export async function init_program(gl: WebGL2RenderingContext) {
   const program = createProgram(gl, vertexShader, fragmentShader);
   const a_position = gl.getAttribLocation(program, "a_position");
   const a_texcoord = gl.getAttribLocation(program, "a_texcoord");
+  const a_transcoord1 = gl.getAttribLocation(program, "a_transcoord1");
+  const a_transcoord2 = gl.getAttribLocation(program, "a_transcoord2");
   const a_layer = gl.getAttribLocation(program, "a_layer");
+  const a_trans_layer1 = gl.getAttribLocation(program, "a_trans_layer1");
+  const a_trans_layer2 = gl.getAttribLocation(program, "a_trans_layer2");
   const a_brightness = gl.getAttribLocation(program, "a_brightness");
+
   const u_matrix = gl.getUniformLocation(program, "u_matrix");
+  const u_texture = gl.getUniformLocation(program, "u_texture");
+  const u_transition = gl.getUniformLocation(program, "u_transition");
 
   return {
     program,
     attrib_locations: {
       a_position,
       a_texcoord,
+      a_transcoord1,
+      a_transcoord2,
       a_layer,
+      a_trans_layer1,
+      a_trans_layer2,
       a_brightness
     }, 
     uniform_locations: {
-      u_matrix
+      u_matrix,
+      u_texture,
+      u_transition,
     }
   }
 }
@@ -57,12 +70,12 @@ export function load_uint8_array(buf: Uint8Array, location: number, size: number
       location, size, gl.UNSIGNED_BYTE, false, 0, 0);
 }
 
-export function define_texture(image: ImageData, depth: number, gl: WebGL2RenderingContext) {
+export function define_texture(image: ImageData, index: number, depth: number, gl: WebGL2RenderingContext) {
   // Create a texture.
   var texture = gl.createTexture();
 
   // use texture unit 0
-  gl.activeTexture(gl.TEXTURE0 + 0);
+  gl.activeTexture(gl.TEXTURE0 + index);
 
   // bind to the TEXTURE_2D bind point of texture unit 0
   gl.bindTexture(gl.TEXTURE_2D_ARRAY, texture);
@@ -84,6 +97,7 @@ export function define_texture(image: ImageData, depth: number, gl: WebGL2Render
     image.data
   );
   gl.generateMipmap(gl.TEXTURE_2D_ARRAY);
+  gl.bindTexture(gl.TEXTURE_2D_ARRAY, null);
 
   return texture;
 }

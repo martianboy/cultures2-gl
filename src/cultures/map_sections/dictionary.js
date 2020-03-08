@@ -5,20 +5,20 @@ import { read_file } from '../../utils/file_reader';
 /**
  * @param {Blob} blob 
  */
-export async function hoixdpae(blob) {
+export async function dictionary(blob) {
   const buf = await read_file(blob);
 
   const view = new SequentialDataView(buf);
 
   const content = {
     len: view.getUint32(),
-    ground_types: []
+    dictionary: []
   };
 
   for (let i = 0; i < content.len; i++) {
     const str = view.getShortString();
     view.skip(1);
-    content.ground_types.push(str);
+    content.dictionary.push(str);
   }
 
   return content;
