@@ -30,7 +30,7 @@ function triB(i: number, map_data: CulturesMapData) {
   ].map(x => x / 2);
 }
 
-function triACoords(i: number, w: number): [number, number, number] {
+export function triACoords(i: number, w: number): [number, number, number] {
   let row = Math.floor(i / w);
 
   return [
@@ -40,7 +40,7 @@ function triACoords(i: number, w: number): [number, number, number] {
   ];
 }
 
-function triBCoords(i: number, w: number): [number, number, number] {
+export function triBCoords(i: number, w: number): [number, number, number] {
   let row = Math.floor(i / w);
 
   return [

@@ -1,5 +1,40 @@
 import { CulturesMapData } from "../../cultures/map";
 import { CulturesRegistry } from "../../cultures/registry";
+import { triACoords, triBCoords } from "./tessellate";
+
+function brightnessAtTriA(i: number, map_data: CulturesMapData): [number, number, number] {
+  let row = Math.floor(i / map_data.width);
+  let col = i % map_data.width;
+  let lighting = map_data.lighting;
+
+  if (row < 1 || row >= map_data.height - 1 || col < 1 || col >= map_data.width - 1) {
+    return [0, 0, 0];
+  }
+
+  const coords = triACoords(i, map_data.width);
+  return [
+    (lighting[coords[0]]- 0x7F) / 256 + 1,
+    (lighting[coords[1]]- 0x7F) / 256 + 1,
+    (lighting[coords[2]]- 0x7F) / 256 + 1,
+  ];
+}
+
+function brightnessAtTriB(i: number, map_data: CulturesMapData): [number, number, number] {
+  let row = Math.floor(i / map_data.width);
+  let col = i % map_data.width;
+  let lighting = map_data.lighting;
+
+  if (row < 1 || row >= map_data.height - 1 || col < 1 || col >= map_data.width - 1) {
+    return [0, 0, 0];
+  }
+
+  const coords = triBCoords(i, map_data.width);
+  return [
+    (lighting[coords[0]] - 0x7F) / 256 + 1,
+    (lighting[coords[1]] - 0x7F) / 256 + 1,
+    (lighting[coords[2]] - 0x7F) / 256 + 1,
+  ];
+}
 
 export function get_texture_buf(
   map: CulturesMapData,
@@ -91,50 +126,24 @@ export function get_texture_buf(
       }
     }
 
-    let brightness_a, brightness_b;
-    let row = Math.floor(i / map.width);
-    let col = i % map.width;
-
-    if (row % 2 === 0) {
-      if (map.lighting[i] > 0) {
-        brightness_a = (map.lighting[i] - 0x7F) / 256 + 1;
-        brightness_b = (map.lighting[i] - 0x7F) / 256 + 1;
-      } else if (row === 0 || row === map.height - 1 || col === 0 || col === map.width - 1) {
-        brightness_a = 0.5;
-        brightness_b = 0.5;
-      } else {
-        brightness_a = (Math.min(map.lighting[i + map.width] || 0x1000, map.lighting[i + map.width - 1] || 0x1000) - 0x7F) / 256 + 1;
-        brightness_b = (Math.min(map.lighting[i + map.width] || 0x1000, map.lighting[i + 1] || 0x1000) - 0x7F) / 256 + 1;
-      }
-    } else {
-      if (map.lighting[i] > 0) {
-        brightness_a = (map.lighting[i] - 0x7F) / 256 + 1;
-        brightness_b = (map.lighting[i] - 0x7F) / 256 + 1;
-      } else if (row === 0 || row === map.height - 1 || col === 0 || col === map.width - 1) {
-        brightness_a = 0.5;
-        brightness_b = 0.5;
-      } else {
-        brightness_a = (Math.min(map.lighting[i + map.width] || 0x1000, map.lighting[i + map.width + 1] || 0x1000) - 0x7F) / 256 + 1;
-        brightness_b = (Math.min(map.lighting[i + map.width + 1] || 0x1000, map.lighting[i + 1] || 0x1000) - 0x7F) / 256 + 1;
-      }
-    }
-
+    let brightness_a = brightnessAtTriA(i, map);
     for (let j = 0; j < 3; j++) {
       tex_coords[2 * 6 * i + 2 * j + 0] = pattern.GfxCoordsA[2 * j] / 256;
       tex_coords[2 * 6 * i + 2 * j + 1] = pattern.GfxCoordsA[2 * j + 1] / 256;
       layers[2 * 3 * i + j] = layer;
-      brightness[2 * 3 * i + j] = brightness_a > 1.5 ? 0.5 : brightness_a;
+      brightness[2 * 3 * i + j] = brightness_a[j];
     }
 
     tile_name = dp[bp[i]];
     pattern = registry.patterns.get(tile_name);
     layer = path_idx.get(pattern.GfxTexture)!;
 
+    let brightness_b = brightnessAtTriB(i, map);
     for (let j = 3; j < 6; j++) {
       tex_coords[2 * 6 * i + 2 * j + 0] = pattern.GfxCoordsB[2 * (j - 3)] / 256;
       tex_coords[2 * 6 * i + 2 * j + 1] = pattern.GfxCoordsB[2 * (j - 3) + 1] / 256;
       layers[2 * 3 * i + j] = layer;
-      brightness[2 * 3 * i + j] = brightness_b > 1.5 ? 0.5 : brightness_b;
+      brightness[2 * 3 * i + j] = brightness_b[j - 3];
     }
   }
 
