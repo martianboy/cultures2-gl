@@ -3,6 +3,11 @@ import { CulturesRegistry, PatternTransition } from "../cultures/registry";
 import { pcx_read } from './pcx';
 import { read_map_data } from './map';
 
+import { WorkerPool } from '../utils/worker_pool';
+
+// eslint-disable-next-line import/no-webpack-loader-syntax
+const worker = require('workerize-loader!./rm.worker');
+
 function uniq<T>(arr: T[]): T[] {
   return Array.from(new Set(arr));
 }
@@ -10,10 +15,12 @@ function uniq<T>(arr: T[]): T[] {
 export class CulturesResourceManager {
   fs: CulturesFS;
   registry: CulturesRegistry;
+  worker_pool: WorkerPool;
   private pattern_cache: Map<string, Promise<ImageData>> = new Map();
 
   constructor(fs: CulturesFS, registry: CulturesRegistry) {
     this.fs = fs;
+    this.worker_pool = new WorkerPool(worker, 10);
     this.registry = registry;
   }
 
@@ -30,12 +37,20 @@ export class CulturesResourceManager {
     return img_p;
   }
 
-  async load_all_patterns(): Promise<{ paths: string[]; image: ImageData; }> {
-    const paths = Array.from(new Set(Array.from(this.registry.patterns.values()).map(p => p.GfxTexture)));
+  async load_landscape_bmd() {
 
-    const images = await Promise.all(paths.map(path => {
+  }
+
+  async load_all_patterns(): Promise<{ paths: string[]; image: ImageData; }> {
+    const paths = uniq(Array.from(this.registry.patterns.values()).map(p => p.GfxTexture));
+
+    const images = await Promise.all(paths.map(async path => {
       const blob = this.fs.open(path);
-      return pcx_read(blob);
+      const result = await this.worker_pool.call<{ blob: Blob }, { width: number; height: number; data: ArrayBuffer; }>('pcx_read', {
+        blob
+      });
+
+      return new ImageData(new Uint8ClampedArray(result.data), result.width, result.height);
     }));
 
     const height = images.reduce((r, i) => r + i.height, 0);

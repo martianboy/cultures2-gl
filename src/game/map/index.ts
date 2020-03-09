@@ -7,6 +7,11 @@ import { CulturesFS } from "../../cultures/fs";
 import { triangulate_map } from "./tessellate";
 import { get_texture_buf } from "./texture";
 import { draggable } from "../../behaviors/draggable";
+import { WorkerPool } from "../../utils/worker_pool";
+
+// eslint-disable-next-line import/no-webpack-loader-syntax
+const worker = require('workerize-loader!./tessellate.worker');
+const pool = new WorkerPool(worker, 1);
 
 interface IProgram {
   program: WebGLProgram;
@@ -43,8 +48,10 @@ export class CulturesMap {
 
     this.gl.bindVertexArray(this.vao);
 
+    const triangulate_result: { data: ArrayBuffer } = await pool.call('triangulate_map', { width: this.map.width, height: this.map.height, elevation: this.map.elevation });
+
     const vertices = new Float32Array(
-      triangulate_map(this.map)
+      triangulate_result.data
     );
     gl_helper.load_float_array(vertices, this.program.attrib_locations.a_position, 2, this.gl);
 

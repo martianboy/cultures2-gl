@@ -34,3 +34,6 @@ export const hoix1tme = common_decoding;
 export const hoix2tme = common_decoding;
 export const hoix3tme = common_decoding;
 export const hoix4tme = common_decoding;
+
+export const hoixdlae = dictionary;
+export const hoixalme = common_decoding2;

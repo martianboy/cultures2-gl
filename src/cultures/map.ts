@@ -23,6 +23,10 @@ export interface CulturesMapData {
   trans_a2: Uint8Array;
   trans_b2: Uint8Array;
 
+  landscape_index: string[];
+  landscape_levels: Uint8Array;
+  landscape_types: Uint16Array;
+
   sections: Record<keyof typeof parsers, IMapDataSection>;
 }
 
@@ -72,6 +76,11 @@ export async function read_map_data(blob: Blob): Promise<CulturesMapData> {
     trans_b1: sections.hoix2tme.content.data,
     trans_a2: sections.hoix3tme.content.data,
     trans_b2: sections.hoix4tme.content.data,
+
+    landscape_index: sections.hoixdlae.content.dictionary,
+    landscape_types: sections.hoixalme.content.data,
+    landscape_levels: sections.hoixvlml.content.data,
+
     sections
   };
 }
