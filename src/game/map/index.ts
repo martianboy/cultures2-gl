@@ -4,14 +4,8 @@ import { CulturesResourceManager } from "../../cultures/resource_manager";
 import * as gl_helper from "./gl";
 import { read_map_data, CulturesMapData } from "../../cultures/map";
 import { CulturesFS } from "../../cultures/fs";
-import { triangulate_map } from "./tessellate";
 import { get_texture_buf } from "./texture";
 import { draggable } from "../../behaviors/draggable";
-import { WorkerPool } from "../../utils/worker_pool";
-
-// eslint-disable-next-line import/no-webpack-loader-syntax
-const worker = require('workerize-loader!./tessellate.worker');
-const pool = new WorkerPool(worker, 1);
 
 interface IProgram {
   program: WebGLProgram;
@@ -48,11 +42,9 @@ export class CulturesMap {
 
     this.gl.bindVertexArray(this.vao);
 
-    const triangulate_result: { data: ArrayBuffer } = await pool.call('triangulate_map', { width: this.map.width, height: this.map.height, elevation: this.map.elevation });
+    const { triangulate } = await import('cultures2-wasm');
+    const vertices = triangulate(this.map.width, this.map.height, this.map.elevation);
 
-    const vertices = new Float32Array(
-      triangulate_result.data
-    );
     gl_helper.load_float_array(vertices, this.program.attrib_locations.a_position, 2, this.gl);
 
     const [
@@ -121,13 +113,13 @@ export class CulturesMap {
   }
 }
 
-async function create_map(map_data: CulturesMapData, canvas: HTMLCanvasElement, rm: CulturesResourceManager) {
+function create_map(map_data: CulturesMapData, canvas: HTMLCanvasElement, rm: CulturesResourceManager) {
   const gl = canvas.getContext('webgl2');
   if (!gl) {
     throw new Error('Context creation failed.');
   }
 
-  const { program, attrib_locations, uniform_locations } = await gl_helper.init_program(gl);
+  const { program, attrib_locations, uniform_locations } = gl_helper.init_program(gl);
 
   const map = new CulturesMap(map_data, gl, rm, {
     program,
@@ -150,7 +142,7 @@ export async function load_map(
   rm: CulturesResourceManager
 ) {
   const map_data = await rm.load_map(path);
-  const map = await create_map( map_data, canvas, rm );
+  const map = create_map( map_data, canvas, rm );
   await map.initialize();
   return map;
 }
@@ -162,7 +154,7 @@ export async function load_user_map(
 ) {
   const blob = customFS.open("currentusermap\\map.dat");
   const map_data = await read_map_data(blob);
-  const map = await create_map( map_data, canvas, rm );
+  const map = create_map( map_data, canvas, rm );
   await map.initialize();
   return map;
 }

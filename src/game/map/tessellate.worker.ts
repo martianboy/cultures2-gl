@@ -1,6 +1,6 @@
 import { triangulate_map } from './tessellate';
 
-function call_triangulate_map(ev: MessageEvent) {
+async function call_triangulate_map(ev: MessageEvent) {
   const { width, height, elevation } = ev.data;
   const data = triangulate_map(width, height, elevation);
 

@@ -1,12 +1,9 @@
-import { load_shader, createShader, createProgram } from "../../utils/webgl";
+import { createShader, createProgram } from "../../utils/webgl";
 
-const vertexShaderUrl = require('../../shaders/ground/vertex.glsl');
-const fragmentShaderUrl = require('../../shaders/ground/fragment.glsl');
+import vertexShaderSource from '../../shaders/ground/vertex.glsl';
+import fragmentShaderSource from '../../shaders/ground/fragment.glsl';
 
-export async function init_program(gl: WebGL2RenderingContext) {
-  const vertexShaderSource = await load_shader(vertexShaderUrl);
-  const fragmentShaderSource = await load_shader(fragmentShaderUrl);
-
+export function init_program(gl: WebGL2RenderingContext) {
   // create GLSL shaders, upload the GLSL source, compile the shaders
   var vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
   var fragmentShader = createShader(
