@@ -32,16 +32,19 @@ export class CulturesFS {
     }
   }
 
-  /**
-   * @returns {IterableIterator<import('./fs').FileInfo>}
-   */
-  ls() {
+  ls(): IterableIterator<import('./fs').FileInfo> {
     return this.files.values();
   }
 
-  open(path: string) {
+  stats(path: string): FileInfo {
     const fi = this.files.get(path.toLowerCase());
     if (!fi) throw new Error(`File not found: ${path}`);
+
+    return fi;
+  }
+
+  open(path: string): Blob {
+    const fi = this.stats(path);
 
     return this.datafile.slice(fi.offset, fi.offset + fi.length);
   }

@@ -1,5 +1,6 @@
 import { CulturesFS } from "../cultures/fs";
 import { CulturesRegistry, PatternTransition } from "../cultures/registry";
+import { read_file } from '../utils/file_reader';
 import { pcx_read } from './pcx';
 import { read_map_data } from './map';
 
@@ -42,25 +43,31 @@ export class CulturesResourceManager {
   }
 
   async load_all_patterns(): Promise<{ paths: string[]; image: ImageData; }> {
+    const { create_2d_texture } = await import('cultures2-wasm');
     const paths = uniq(Array.from(this.registry.patterns.values()).map(p => p.GfxTexture));
 
-    const images = await Promise.all(paths.map(async path => {
+    const index_tables = paths.reduce<{ index: Uint32Array; acc_length: number }>((s, path, i) => {
+      const stats = this.fs.stats(path);
+
+      s.index[i] = s.acc_length;
+      s.acc_length += stats.length;
+
+      return s;
+    }, {
+      index: new Uint32Array(paths.length),
+      acc_length: 0,
+    });
+
+    const buf = new Uint8Array(index_tables.acc_length);
+
+    await Promise.all(paths.map(async (path, i) => {
       const blob = this.fs.open(path);
-      const result = await this.worker_pool.call<{ blob: Blob }, { width: number; height: number; data: ArrayBuffer; }>('pcx_read', {
-        blob
-      });
 
-      return new ImageData(new Uint8ClampedArray(result.data), result.width, result.height);
+      const tex_buf = await read_file(blob);
+      buf.set(new Uint8Array(tex_buf), index_tables.index[i]);
     }));
-
-    const height = images.reduce((r, i) => r + i.height, 0);
-    const result = new ImageData(images[0].width, height);
-
-    let offset = 0;
-    for (const img of images) {
-      result.data.set(img.data, offset);
-      offset += img.data.byteLength;
-    }
+    const img_buf = create_2d_texture(256, 256, buf, index_tables.index);
+    const result = new ImageData(Uint8ClampedArray.from(img_buf), 256);
 
     return {
       paths,
@@ -69,6 +76,8 @@ export class CulturesResourceManager {
   }
 
   async load_all_pattern_transitions(): Promise<{ paths: string[]; image: ImageData; }> {
+    const { create_2d_texture_masked } = await import('cultures2-wasm');
+
     const transitions = new Map<string, PatternTransition>();
     for (const tr of this.registry.pattern_transitions.values()) {
       if (transitions.has(tr.GfxTexture)) continue;
@@ -76,22 +85,35 @@ export class CulturesResourceManager {
     }
 
     const paths = Array.from(transitions.keys());
+    const index_tables = paths.reduce<{ index: Uint32Array; mask_index: Uint32Array; acc_length: number }>((s, path, i) => {
+      const texture_stats = this.fs.stats(path);
+      const mask_stats = this.fs.stats(transitions.get(path)!.GfxTextureAlpha);
 
-    const images = await Promise.all(paths.map((path, i) => {
+      s.index[i] = s.acc_length;
+      s.mask_index[i] = s.acc_length + texture_stats.length;
+      s.acc_length += texture_stats.length + mask_stats.length;
+
+      return s;
+    }, {
+      index: new Uint32Array(paths.length),
+      mask_index: new Uint32Array(paths.length),
+      acc_length: 0,
+    });
+
+    const buf = new Uint8Array(index_tables.acc_length);
+
+    await Promise.all(paths.map(async (path, i) => {
       const blob = this.fs.open(path);
       const mask = this.fs.open(transitions.get(path)!.GfxTextureAlpha);
 
-      return pcx_read(blob, mask);
+      return Promise.all([
+        read_file(blob).then(tex_buf => buf.set(new Uint8Array(tex_buf), index_tables.index[i]), ex => Promise.reject(ex)),
+        read_file(mask).then(mask_buf => buf.set(new Uint8Array(mask_buf), index_tables.mask_index[i]), ex => Promise.reject(ex)),
+      ]);
     }));
 
-    const height = images.reduce((r, i) => r + i.height, 0);
-    const result = new ImageData(images[0].width, height);
-
-    let offset = 0;
-    for (const img of images) {
-      result.data.set(img.data, offset);
-      offset += img.data.byteLength;
-    }
+    const img_buf = create_2d_texture_masked(256, 256, buf, index_tables.index, index_tables.mask_index);
+    const result = new ImageData(Uint8ClampedArray.from(img_buf), 256);
 
     return {
       paths,

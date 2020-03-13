@@ -4,11 +4,13 @@
   "private": true,
   "dependencies": {
     "cultures2-wasm": "file:../cultures2-wasm/pkg",
+    "lodash-es": "^4.17.15",
     "react": "^16.13.0",
     "react-dom": "^16.13.0",
     "twgl.js": "^4.14.2"
   },
   "devDependencies": {
+    "@types/lodash-es": "^4.17.3",
     "@types/node": "^13.7.7",
     "@types/react": "^16.9.23",
     "@types/react-dom": "^16.9.5",

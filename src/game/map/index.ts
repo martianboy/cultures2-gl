@@ -1,4 +1,4 @@
-import { m4 } from "twgl.js";
+import { throttle } from 'lodash-es';
 
 import { CulturesResourceManager } from "../../cultures/resource_manager";
 import * as gl_helper from "./gl";
@@ -6,6 +6,7 @@ import { read_map_data, CulturesMapData } from "../../cultures/map";
 import { CulturesFS } from "../../cultures/fs";
 import { get_texture_buf } from "./texture";
 import { draggable } from "../../behaviors/draggable";
+import { MapGeometry } from "./geometry";
 
 interface IProgram {
   program: WebGLProgram;
@@ -22,10 +23,22 @@ interface IProgram {
   uniform_locations: Record<'u_matrix' | 'u_texture' | 'u_transition', WebGLUniformLocation | null>;
 }
 
+interface GlBuffers {
+  a_position: Float32Array;
+  a_texcoord: Float32Array;
+  a_layer: Float32Array;
+  a_transcoord1: Float32Array;
+  a_trans_layer1: Float32Array;
+  a_transcoord2: Float32Array;
+  a_trans_layer2: Float32Array;
+  a_brightness: Float32Array;
+}
+
 export class CulturesMap {
-  private translationMatrix = [0, 0, 0];
   private animationFrame: number = 0;
   private vao: WebGLVertexArrayObject | null;
+  private geometry: MapGeometry;
+  private buffers?: GlBuffers;
 
   constructor(
     private map: CulturesMapData,
@@ -34,6 +47,12 @@ export class CulturesMap {
     private program: IProgram
   ) {
     this.vao = gl.createVertexArray();
+    this.geometry = new MapGeometry(
+      this.gl.canvas.width,
+      this.gl.canvas.height,
+      map.width,
+      map.height
+    );
   }
 
   async initialize() {
@@ -44,8 +63,6 @@ export class CulturesMap {
 
     const { triangulate } = await import('cultures2-wasm');
     const vertices = triangulate(this.map.width, this.map.height, this.map.elevation);
-
-    gl_helper.load_float_array(vertices, this.program.attrib_locations.a_position, 2, this.gl);
 
     const [
       texcoords,
@@ -61,13 +78,26 @@ export class CulturesMap {
       transition_paths,
       this.rm.registry
     );
-    gl_helper.load_float_array(texcoords, this.program.attrib_locations.a_texcoord, 2, this.gl);
-    gl_helper.load_float_array(layers, this.program.attrib_locations.a_layer, 1, this.gl);
-    gl_helper.load_float_array(trans_coords1, this.program.attrib_locations.a_transcoord1, 2, this.gl);
-    gl_helper.load_float_array(transition_layers1, this.program.attrib_locations.a_trans_layer1, 1, this.gl);
-    gl_helper.load_float_array(trans_coords2, this.program.attrib_locations.a_transcoord2, 2, this.gl);
-    gl_helper.load_float_array(transition_layers2, this.program.attrib_locations.a_trans_layer2, 1, this.gl);
-    gl_helper.load_float_array(brightness, this.program.attrib_locations.a_brightness, 1, this.gl);
+
+    this.buffers = {
+      a_position: vertices,
+      a_texcoord: texcoords,
+      a_layer: layers,
+      a_transcoord1: trans_coords1,
+      a_transcoord2: trans_coords2,
+      a_trans_layer1: transition_layers1,
+      a_trans_layer2: transition_layers2,
+      a_brightness: brightness,
+    };
+
+    gl_helper.load_float_array(this.buffers.a_position, this.program.attrib_locations.a_position, 2, this.gl);
+    gl_helper.load_float_array(this.buffers.a_texcoord, this.program.attrib_locations.a_texcoord, 2, this.gl);
+    gl_helper.load_float_array(this.buffers.a_layer, this.program.attrib_locations.a_layer, 1, this.gl);
+    gl_helper.load_float_array(this.buffers.a_transcoord1, this.program.attrib_locations.a_transcoord1, 2, this.gl);
+    gl_helper.load_float_array(this.buffers.a_trans_layer1, this.program.attrib_locations.a_trans_layer1, 1, this.gl);
+    gl_helper.load_float_array(this.buffers.a_transcoord2, this.program.attrib_locations.a_transcoord2, 2, this.gl);
+    gl_helper.load_float_array(this.buffers.a_trans_layer2, this.program.attrib_locations.a_trans_layer2, 1, this.gl);
+    gl_helper.load_float_array(this.buffers.a_brightness, this.program.attrib_locations.a_brightness, 1, this.gl);
 
     const tex_patterns = gl_helper.define_texture(patterns, 0, pattern_paths.length, this.gl);
     const tex_transitions1 = gl_helper.define_texture(transitions, 1, transition_paths.length, this.gl);
@@ -86,24 +116,21 @@ export class CulturesMap {
     this.gl.activeTexture(this.gl.TEXTURE1);
     this.gl.bindTexture(this.gl.TEXTURE_2D_ARRAY, tex_transitions1);
     this.gl.uniform1i(this.program.uniform_locations.u_transition, 1);
+
+    this.translate(0, 0);
   }
 
   translate(dx: number, dy: number) {
-    this.translationMatrix[0] += dx;
-    this.translationMatrix[1] += dy;
+    this.geometry.translate(dx, dy);
+    this.reload_buffers();
   }
 
+  reload_buffers = throttle(() => {
+    this.gl.uniformMatrix4fv(this.program.uniform_locations.u_matrix, false, this.geometry.transformation);
+  }, 20, { leading: true })
+
   render = () => {
-    let scaleFactor = 0.8;
-    let size = 80 * scaleFactor;
-
-    let matrix = m4.ortho(0, this.gl.canvas.width, this.gl.canvas.height, 0, -1, 1);
-    matrix = m4.scale(matrix, [size, size / (35 / 39), 1]);
-    matrix = m4.translate(matrix, this.translationMatrix);
-    this.gl.uniformMatrix4fv(this.program.uniform_locations.u_matrix, false, matrix);
-
-    // gl.bindTexture(gl.TEXTURE_2D, texture);
-    this.gl.drawArrays(this.gl.TRIANGLES, 0, this.map.width * this.map.height * 2 * 3);
+    this.gl.drawArrays(this.gl.TRIANGLES, 0, this.geometry.primitive_count);
 
     this.animationFrame = requestAnimationFrame(this.render);
   }
