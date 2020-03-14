@@ -4,11 +4,7 @@
 // It will receive data from a buffer
 in vec2 a_position;
 in vec2 a_texcoord;
-in vec2 a_transcoord1;
-in vec2 a_transcoord2;
 in float a_layer;
-in float a_trans_layer1;
-in float a_trans_layer2;
 in float a_brightness;
 
 // A matrix to transform the positions by
@@ -30,10 +26,6 @@ void main() {
 
   // Pass the texcoord to the fragment shader.
   v_texcoord = a_texcoord;
-  v_transcoord1 = a_transcoord1;
-  v_transcoord2 = a_transcoord2;
   layer = a_layer;
-  trans_layer1 = a_trans_layer1;
-  trans_layer2 = a_trans_layer2;
   brightness = a_brightness;
 }

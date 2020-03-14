@@ -1,10 +1,12 @@
 // import { throttle } from 'lodash-es';
 
 import { CulturesResourceManager } from "../../cultures/resource_manager";
-import * as gl_helper from "./gl";
 import { CulturesMapData } from "../../cultures/map";
-import { get_texture_buf } from "./texture";
 import { MapGeometry } from "./geometry";
+import { MapLayer } from "./interfaces";
+
+import { get_texture_buf } from "./texture";
+import * as gl_helper from "./gl";
 
 import { createShader, createProgram } from "../../utils/webgl";
 
@@ -86,8 +88,7 @@ function init_program(gl: WebGL2RenderingContext): IProgram {
   }
 }
 
-export class MapGround {
-  private animationFrame: number = 0;
+export class MapGround implements MapLayer {
   private vao: WebGLVertexArrayObject | null;
   private buffers?: GlBuffers;
   private textures?: GlTextures;
@@ -167,9 +168,5 @@ export class MapGround {
     this.gl.uniformMatrix4fv(this.program.uniform_locations.u_matrix, false, this.geometry.transformation);
 
     this.gl.drawArrays(this.gl.TRIANGLES, 0, this.geometry.primitive_count);
-  }
-
-  stop() {
-    cancelAnimationFrame(this.animationFrame);
   }
 }
