@@ -1,6 +1,25 @@
 import { CulturesMapData } from "../../cultures/map";
 import { CulturesRegistry } from "../../cultures/registry";
-import { triACoords, triBCoords } from "./tessellate";
+
+export function triACoords(i: number, w: number): [number, number, number] {
+  let row = Math.floor(i / w);
+
+  return [
+    i,
+    i + w + (row % 2),
+    i + w + (row % 2) - 1,
+  ];
+}
+
+export function triBCoords(i: number, w: number): [number, number, number] {
+  let row = Math.floor(i / w);
+
+  return [
+    i,
+    i + 1,
+    i + w + (row % 2),
+  ];
+}
 
 function brightnessAtTriA(i: number, map_data: CulturesMapData): [number, number, number] {
   let row = Math.floor(i / map_data.width);

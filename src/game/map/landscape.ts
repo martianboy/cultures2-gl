@@ -1,22 +1,28 @@
 import { CulturesMapData } from "../../cultures/map";
 import { CulturesResourceManager } from "../../cultures/resource_manager";
 import { MapGeometry } from "./geometry";
-import { MapLayer } from './interfaces';
+import { MapLayer } from "./interfaces";
 
-import { createShader, createProgram } from "../../utils/webgl";
+import {
+  createShader,
+  createProgram,
+  load_float_array,
+  define_texture
+} from "../../utils/webgl";
 
-import vertexShaderSource from '../../shaders/landscape/vertex.glsl';
-import fragmentShaderSource from '../../shaders/landscape/fragment.glsl';
+import vertexShaderSource from "../../shaders/landscape/vertex.glsl";
+import fragmentShaderSource from "../../shaders/landscape/fragment.glsl";
 
 interface IProgram {
   program: WebGLProgram;
   attrib_locations: Record<
-    | 'a_position'
-    | 'a_texcoord'
-    | 'a_layer'
-    | 'a_brightness'
-  , number>;
-  uniform_locations: Record<'u_matrix' | 'u_textures', WebGLUniformLocation | null>;
+    "a_position" | "a_texcoord" | "a_layer" | "a_brightness",
+    number
+  >;
+  uniform_locations: Record<
+    "u_matrix" | "u_textures",
+    WebGLUniformLocation | null
+  >;
 }
 
 interface GlBuffers {
@@ -31,8 +37,8 @@ interface GlBuffers {
 }
 
 interface GlTextures {
-  patterns: WebGLTexture,
-  transitions: WebGLTexture,
+  patterns: WebGLTexture;
+  transitions: WebGLTexture;
 }
 
 function init_program(gl: WebGL2RenderingContext): IProgram {
@@ -61,12 +67,12 @@ function init_program(gl: WebGL2RenderingContext): IProgram {
       a_texcoord,
       a_layer,
       a_brightness
-    }, 
+    },
     uniform_locations: {
       u_matrix,
-      u_textures,
+      u_textures
     }
-  }
+  };
 }
 
 export class MapGround implements MapLayer {
@@ -95,7 +101,12 @@ export class MapGround implements MapLayer {
 
     // this.gl.uniform1i(this.program.uniform_locations.u_texture, 0);
     // this.gl.uniform1i(this.program.uniform_locations.u_transition, 1);
-    this.gl.uniformMatrix4fv(this.program.uniform_locations.u_matrix, false, this.geometry.transformation);
+    this.gl.uniformMatrix4fv(
+      this.program.uniform_locations.u_matrix,
+      false,
+      this.geometry.transformation
+    );
 
-    this.gl.drawArrays(this.gl.TRIANGLES, 0, this.geometry.primitive_count);  }
+    this.gl.drawArrays(this.gl.TRIANGLES, 0, this.geometry.primitive_count);
+  }
 }
