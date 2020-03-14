@@ -1,52 +1,3 @@
-import { createShader, createProgram } from "../../utils/webgl";
-
-import vertexShaderSource from '../../shaders/ground/vertex.glsl';
-import fragmentShaderSource from '../../shaders/ground/fragment.glsl';
-
-export function init_program(gl: WebGL2RenderingContext) {
-  // create GLSL shaders, upload the GLSL source, compile the shaders
-  var vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
-  var fragmentShader = createShader(
-    gl,
-    gl.FRAGMENT_SHADER,
-    fragmentShaderSource
-  );
-
-  // Link the two shaders into a program
-  const program = createProgram(gl, vertexShader, fragmentShader);
-  const a_position = gl.getAttribLocation(program, "a_position");
-  const a_texcoord = gl.getAttribLocation(program, "a_texcoord");
-  const a_transcoord1 = gl.getAttribLocation(program, "a_transcoord1");
-  const a_transcoord2 = gl.getAttribLocation(program, "a_transcoord2");
-  const a_layer = gl.getAttribLocation(program, "a_layer");
-  const a_trans_layer1 = gl.getAttribLocation(program, "a_trans_layer1");
-  const a_trans_layer2 = gl.getAttribLocation(program, "a_trans_layer2");
-  const a_brightness = gl.getAttribLocation(program, "a_brightness");
-
-  const u_matrix = gl.getUniformLocation(program, "u_matrix");
-  const u_texture = gl.getUniformLocation(program, "u_texture");
-  const u_transition = gl.getUniformLocation(program, "u_transition");
-
-  return {
-    program,
-    attrib_locations: {
-      a_position,
-      a_texcoord,
-      a_transcoord1,
-      a_transcoord2,
-      a_layer,
-      a_trans_layer1,
-      a_trans_layer2,
-      a_brightness
-    }, 
-    uniform_locations: {
-      u_matrix,
-      u_texture,
-      u_transition,
-    }
-  }
-}
-
 export function load_float_array(buf: Float32Array, location: number, size: number, gl: WebGL2RenderingContext) {
   let positionBuffer = gl.createBuffer();
   gl.enableVertexAttribArray(location);
@@ -71,6 +22,8 @@ export function define_texture(image: ImageData, index: number, depth: number, g
   // Create a texture.
   var texture = gl.createTexture();
 
+  if (!texture) throw new Error('Texture could not be created');
+
   // use texture unit 0
   gl.activeTexture(gl.TEXTURE0 + index);
 
@@ -94,7 +47,6 @@ export function define_texture(image: ImageData, index: number, depth: number, g
     image.data
   );
   gl.generateMipmap(gl.TEXTURE_2D_ARRAY);
-  gl.bindTexture(gl.TEXTURE_2D_ARRAY, null);
 
   return texture;
 }

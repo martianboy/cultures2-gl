@@ -38,11 +38,6 @@ export class MapGeometry {
     this.transformation = m4.translate(
       this.base_transformation,
       this.translation,
-      // [
-      //   this.translation[0] - Math.floor(this.translation[0]),
-      //   this.translation[1] - Math.floor(this.translation[1]),
-      //   0.0
-      // ]
     );
   }
 
