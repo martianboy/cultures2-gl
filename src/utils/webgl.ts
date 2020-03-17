@@ -90,3 +90,50 @@ export function define_texture(image: ImageData, index: number, depth: number, g
 
   return texture;
 }
+
+export function define_compressed_texture(buf: ArrayBufferView, width: number, height: number, index: number, depth: number, gl: WebGL2RenderingContext) {
+  // Create a texture.
+  var texture = gl.createTexture();
+
+  if (!texture) throw new Error('Texture could not be created');
+
+  // use texture unit 0
+  gl.activeTexture(gl.TEXTURE0 + index);
+
+  // bind to the TEXTURE_2D bind point of texture unit 0
+  gl.bindTexture(gl.TEXTURE_2D_ARRAY, texture);
+  gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+  const ext = gl.getExtension('WEBGL_compressed_texture_s3tc');
+  if (!ext) throw new Error('WEBGL_compressed_texture_s3tc not enabled.');
+
+  gl.compressedTexImage3D(
+    gl.TEXTURE_2D_ARRAY,
+    0,
+    ext.COMPRESSED_RGBA_S3TC_DXT1_EXT,
+    width,
+    height,
+    depth,
+    0,
+    buf
+  );
+  
+  // (
+  //   gl.TEXTURE_2D_ARRAY,
+  //   0,
+  //   gl.RGBA,
+  //   width,
+  //   height / depth,
+  //   depth,
+  //   0,
+  //   gl.RGBA,
+  //   gl.UNSIGNED_BYTE,
+  //   buf
+  // );
+  gl.generateMipmap(gl.TEXTURE_2D_ARRAY);
+
+  return texture;
+}

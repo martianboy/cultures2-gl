@@ -6,18 +6,17 @@ precision mediump sampler2DArray;
 
 // Passed in from the vertex shader.
 in vec2 v_texcoord;
-in int i_texture;
+flat in int i_texture;
 in float layer;
 in float brightness;
 
 // The texture.
-uniform sampler2DArray[] u_textures;
+uniform sampler2DArray[1] u_textures;
 
 // we need to declare an output for the fragment shader
 out vec4 outColor;
 
 void main() {
-  outColor = texture(u_textures[i_texture], vec3(v_texcoord, layer));
-
-  outColor = vec4(tColor * brightness, 1.0);
+  vec4 texel = texture(u_textures[0], vec3(v_texcoord, layer));
+  outColor = vec4(texel.rgb * brightness, texel.a);
 }

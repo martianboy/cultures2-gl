@@ -4,6 +4,7 @@ import { CulturesFS } from "../../cultures/fs";
 import { draggable } from "../../behaviors/draggable";
 import { MapGeometry } from "./geometry";
 import { MapGround } from "./ground";
+import { MapLandscape } from "./landscape";
 
 export class CulturesMap {
   private animationFrame: number = 0;
@@ -12,6 +13,7 @@ export class CulturesMap {
 
   // Layers
   private ground: MapGround;
+  private landscape: MapLandscape;
 
   constructor(
     map: CulturesMapData,
@@ -28,6 +30,7 @@ export class CulturesMap {
     );
 
     this.ground = new MapGround(map, gl, rm, this.geometry);
+    this.landscape = new MapLandscape(map, gl, rm, this.geometry);
   }
 
   async initialize() {
@@ -35,7 +38,13 @@ export class CulturesMap {
     this.gl.clearColor(0, 0, 0, 0);
     this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
 
+    // this.gl.enable(this.gl.BLEND);
+    // this.gl.blendFunc(this.gl.SRC_ALPHA, this.gl.ONE_MINUS_SRC_ALPHA);
+    // this.gl.blendEquationSeparate(this.gl.FUNC_ADD, this.gl.FUNC_ADD);
+    // this.gl.blendFuncSeparate(this.gl.SRC_ALPHA, this.gl.ONE_MINUS_SRC_ALPHA, this.gl.ONE, this.gl.ZERO);
+
     await this.ground.initialize();
+    await this.landscape.initialize();
 
     this.translate(0, 0);
   }
@@ -46,6 +55,7 @@ export class CulturesMap {
 
   render = () => {
     this.ground.render();
+    this.landscape.render();
 
     this.animationFrame = requestAnimationFrame(this.render);
   };
@@ -61,6 +71,7 @@ function create_map(
   rm: CulturesResourceManager
 ) {
   const gl = canvas.getContext("webgl2");
+
   if (!gl) {
     throw new Error("Context creation failed.");
   }

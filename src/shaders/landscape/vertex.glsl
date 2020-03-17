@@ -4,6 +4,7 @@
 // It will receive data from a buffer
 in vec2 a_position;
 in vec2 a_texcoord;
+in int a_texture;
 in float a_layer;
 in float a_brightness;
 
@@ -12,12 +13,9 @@ uniform mat4 u_matrix;
 
 // a varying to pass the texture coordinates to the fragment shader
 out vec2 v_texcoord;
-out vec2 v_transcoord1;
-out vec2 v_transcoord2;
 out float layer;
-out float trans_layer1;
-out float trans_layer2;
 out float brightness;
+flat out int v_texture;
 
 // all shaders have a main function
 void main() {

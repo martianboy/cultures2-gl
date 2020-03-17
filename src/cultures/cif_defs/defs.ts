@@ -18,7 +18,13 @@ export const GfxLandscape = {
   GfxDynamicBackground: 'boolean',
   gfxdrawvoidever: 'boolean',
   GfxTransition: '[number,string]',
-}
+};
+
+export const GfxPalette256 = {
+  editname: 'string',
+  gfxfile: 'string',
+  gfxpreshade: 'boolean'
+};
 
 export const GfxPattern = {
   EditName: 'string',
@@ -27,14 +33,14 @@ export const GfxPattern = {
   GfxTexture: 'string',
   GfxCoordsA: 'number[]',
   GfxCoordsB: 'number[]',
-}
+};
 
 export const jobgraphics = {
   logictribe: 'number',
   logicjob: 'number',
   gfxbobmanagerbody: 'string',
   gfxpalettebody: 'string',
-}
+};
 
 export const jobbasegraphics = {
   logictribe: 'number',
@@ -44,7 +50,7 @@ export const jobbasegraphics = {
   gfxpalettebasebody: 'string',
   gfxpalettebasehead: 'string',
   gfxpaletterandom: 'string',
-}
+};
 
 export const jobchangegraphics = {
   logictribe: 'number',
@@ -54,7 +60,7 @@ export const jobchangegraphics = {
   gfxpalettebasebody: 'string',
   gfxpalettebasehead: 'string',
   gfxpaletterandom: 'string',
-}
+};
 
 export const GfxHouse = {
   EditName: 'string',
@@ -77,7 +83,7 @@ export const GfxHouse = {
   GfxFlagPoint: '[number,number[]]',
   GfxFirePoint: '[number,number[][]]',
   GfxSmokePoint: '[number,number[][]]',
-}
+};
 
 export const transition = {
   name: 'string',
@@ -86,4 +92,4 @@ export const transition = {
   GfxTextureAlpha: 'string',
   GfxCoordsA: 'number[][]',
   GfxCoordsB: 'number[][]',
-}
+};

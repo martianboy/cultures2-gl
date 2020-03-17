@@ -10,10 +10,38 @@ export interface PatternTransition {
   GfxCoordsB: number[][];
 }
 
+export interface GfxLandscape {
+  EditName: string,
+  EditGroups: string[],
+  LogicType: number,
+  LogicMaximumValency: number,
+  LogicIsWorkable: boolean,
+  logicispileableonmap: boolean,
+  LogicWalkBlockArea: number[][],
+  LogicBuildBlockArea: number[][],
+  LogicWorkArea: number[][],
+  GfxBobLibs: { bmd: string; shadow?: string },
+  GfxPalette: string[],
+  GfxFrames: Record<number, number[]>,
+  GfxStatic: boolean,
+  GfxLoopAnimation: boolean,
+  GfxShadingFactor: number,
+  GfxUserFXMatrix: number,
+  GfxDynamicBackground: boolean,
+  gfxdrawvoidever: boolean,
+  GfxTransition: Record<number, string>,
+}
+
+export interface GfxPalette256 {
+  editname: string;
+  gfxfile: string;
+  gfxpreshade: boolean;
+}
+
 export class CulturesRegistry {
   fs: CulturesFS;
-  palettes: Map<any, any>;
-  landscapes: Map<any, any>;
+  palettes: Map<string, GfxPalette256>;
+  landscapes: Map<string, GfxLandscape> = new Map();
   patterns: Map<any, any>;
   pattern_transitions: Map<string, PatternTransition> = new Map();
   landscape_types: Map<any, any>;
@@ -23,7 +51,6 @@ export class CulturesRegistry {
     this.fs = fs;
 
     this.palettes = new Map();
-    this.landscapes = new Map();
     this.patterns = new Map();
     this.landscape_types = new Map();
     this.animals = new Set();
@@ -35,7 +62,7 @@ export class CulturesRegistry {
 
     for (const section of cif) {
       if (section.name === 'GfxPalette256') {
-        this.palettes.set(section.def.editname, section);
+        this.palettes.set(section.def.editname, section.def);
       }
     }
   }
@@ -76,8 +103,11 @@ export class CulturesRegistry {
     const cif = await read_cif(this.fs.open(PATH));
 
     for (const section of cif) {
-      if (section.name === 'GfxLandscape') {
-        this.landscapes.set(section.def.EditName, section);
+      if (section.name === 'GfxLandscape' && section.def.GfxPalette) {
+        if (!section.def.GfxFrames) {
+          section.def.GfxFrames = { 0: [0] };
+        }
+        this.landscapes.set(section.def.EditName, section.def);
       }
     }
   }

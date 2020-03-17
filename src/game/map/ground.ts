@@ -227,6 +227,14 @@ export class MapGround implements MapLayer {
     this.render();
   }
 
+  bind_textures() {
+    this.gl.activeTexture(this.gl.TEXTURE0);
+    this.gl.bindTexture(this.gl.TEXTURE_2D_ARRAY, this.textures!.patterns);
+
+    this.gl.activeTexture(this.gl.TEXTURE1);
+    this.gl.bindTexture(this.gl.TEXTURE_2D_ARRAY, this.textures!.transitions);
+  }
+
   render() {
     this.gl.useProgram(this.program.program);
     this.gl.bindVertexArray(this.vao);
@@ -238,6 +246,8 @@ export class MapGround implements MapLayer {
       false,
       this.geometry.transformation
     );
+
+    this.bind_textures();
 
     this.gl.drawArrays(this.gl.TRIANGLES, 0, this.geometry.primitive_count);
   }
