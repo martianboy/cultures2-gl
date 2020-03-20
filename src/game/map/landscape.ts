@@ -117,10 +117,13 @@ export class MapLandscape implements MapLayer {
 
       let img = new ImageData(new Uint8ClampedArray(view.slice(encoded_length)), width, height * depth);
       return {
-        texture: define_texture(img, idx, depth, this.gl),
+        texture: define_texture(img, idx, depth, this.gl, {
+          MIN_FILTER: this.gl.NEAREST,
+          MAG_FILTER: this.gl.NEAREST
+        }),
         width,
         height,
-        depth
+        depth,
       };
     });
   }
@@ -136,21 +139,15 @@ export class MapLandscape implements MapLayer {
     const rect_at = (x: number, y: number, w: number, h: number): number[] => {
       const off = (y % 2) / 2;
       return [
-        off + x - w / 2, -y / 2 + (y - h),
-        off + x + w / 2, -y / 2 + y,
-        off + x - w / 2, -y / 2 + y,
+        off + x - w, y / 2 - h,
+        off + x + w, y / 2,
+        off + x - w, y / 2,
 
-        off + x - w / 2, -y / 2 + (y - h),
-        off + x + w / 2, -y / 2 + (y - h),
-        off + x + w / 2, -y / 2 + y,
-      ].map(xx => xx / 2);
+        off + x - w, y / 2 - h,
+        off + x + w, y / 2 - h,
+        off + x + w, y / 2,
+      ];
     }
-
-    // const texcoords_at = (x: number, y: number, layer: number): number[] => {
-    //   return [
-
-    //   ]
-    // }
 
     let objects = this.map.landscape_types.filter((lt, i) => {
       if (lt > this.map.landscape_index.length) return false;
@@ -177,6 +174,7 @@ export class MapLandscape implements MapLayer {
       1, 0,
       1, 1,
     ], 0);
+
     for (let i = 1; i < objects.length; i++) {
       a_texcoord.copyWithin(i * 12, 0, 12);
     }
@@ -195,7 +193,7 @@ export class MapLandscape implements MapLayer {
       let y = Math.floor(i / this.map.height / 2);
       let x = i % (this.map.width * 2);
 
-      a_position.set(rect_at(x, y, width / 35, height / 39), buf_pos * 12);
+      a_position.set(rect_at(x / 2, y, width / this.geometry.width_unit / 2, height / this.geometry.height_unit), buf_pos * 12);
       a_layer.set(Array(6).fill(this.layers_index!.get(this.paths_index![lnd.GfxBobLibs.bmd] * 1000000 + lnd.GfxFrames[level][0] * 100 + this.palettes_index![this.rm.registry.palettes.get(lnd.GfxPalette[0])!.gfxfile]))!, buf_pos * 6);
 
       buf_pos += 1;
@@ -254,11 +252,16 @@ export class MapLandscape implements MapLayer {
     this.gl.useProgram(this.program.program);
     this.gl.bindVertexArray(this.vao);
 
-    // this.gl.uniform1i(this.program.uniform_locations.u_texture, 0);
-    // this.gl.uniform1i(this.program.uniform_locations.u_transition, 1);
+    // let matrix = m4.translate(this.base_transformation, [
+    //   this.geometry.translation[0] * 70,
+    //   this.geometry.translation[1] * 78,
+    //   0
+    // ]);
+
     this.gl.uniformMatrix4fv(
       this.program.uniform_locations.u_matrix,
       false,
+      // matrix,
       this.geometry.transformation
     );
     this.gl.uniform1iv(this.program.uniform_locations.u_textures, Object.values(this.paths_index).slice(0, 16));

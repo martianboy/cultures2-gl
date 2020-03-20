@@ -58,7 +58,7 @@ export function load_uint8_array(buf: Uint8Array, location: number, size: number
       location, size, gl.UNSIGNED_BYTE, false, 0, 0);
 }
 
-export function define_texture(image: ImageData, index: number, depth: number, gl: WebGL2RenderingContext) {
+export function define_texture(image: ImageData, index: number, depth: number, gl: WebGL2RenderingContext, options: { MAG_FILTER?: number; MIN_FILTER?: number; } = {}) {
   // Create a texture.
   var texture = gl.createTexture();
 
@@ -69,8 +69,8 @@ export function define_texture(image: ImageData, index: number, depth: number, g
 
   // bind to the TEXTURE_2D bind point of texture unit 0
   gl.bindTexture(gl.TEXTURE_2D_ARRAY, texture);
-  gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-  gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_MAG_FILTER, options.MAG_FILTER || gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_MIN_FILTER, options.MIN_FILTER || gl.LINEAR);
   gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
   gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 

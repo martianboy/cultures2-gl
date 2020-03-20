@@ -5,9 +5,9 @@ export class MapGeometry {
   private base_transformation: m4.Mat4;
 
   public translation: [number, number, 0] = [0, 0, 0];
-  private zoom_factor = 1.0;
-  private width_unit = 70;
-  private height_unit = 78;
+  public zoom_factor = 1.0;
+  public width_unit = 70;
+  public height_unit = 78;
 
   public primitive_count: number;
 
