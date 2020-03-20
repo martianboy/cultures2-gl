@@ -23,7 +23,8 @@ export const GfxLandscape = {
 export const GfxPalette256 = {
   editname: 'string',
   gfxfile: 'string',
-  gfxpreshade: 'boolean'
+  gfxpreshade: 'boolean',
+  gfxremaptopreshaded: 'string'
 };
 
 export const GfxPattern = {

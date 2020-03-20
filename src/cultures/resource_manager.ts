@@ -51,31 +51,56 @@ export class CulturesResourceManager {
     const palette_paths = uniq(Array.from(this.registry.palettes.values())).map(p => p.gfxfile);
     const palettes_index = Object.fromEntries(Object.entries(palette_paths).map(([k, v]) => [v, parseInt(k)]));
 
-    const frame_count_per_bob = landscapes.reduce((m, lnd) => {
-      let current = m.get(lnd.GfxBobLibs.bmd) || 0;
-      let max_frame = Object.entries(lnd.GfxFrames).reduce((r, [lvl, fs]) => Math.max(r, ...fs), current);
+    // const frame_count_per_bob = landscapes.reduce((m, lnd) => {
+    //   let current = m.get(lnd.GfxBobLibs.bmd) || 0;
+    //   let max_frame = Object.entries(lnd.GfxFrames).reduce((r, [lvl, fs]) => Math.max(r, ...fs), current);
 
-      m.set(lnd.GfxBobLibs.bmd, max_frame);
-      return m;
-    }, new Map<string, number>());
+    //   m.set(lnd.GfxBobLibs.bmd, max_frame);
+    //   return m;
+    // }, new Map<string, number>());
 
-    const total_frames = Array.from(frame_count_per_bob.values()).reduce((s, fs) => s + fs + 1, 0);
-    const frame_palette_index = new Uint32Array(total_frames);
+    // const bmd_frame_offset = new Map<string, number>();
+    // let last_count = 0;
+    // for (const [p, c] of frame_count_per_bob.entries()) {
+    //   bmd_frame_offset
+    // }
 
-    let frame_palette_index_ptr = 0;
-    let last_bob = landscapes[0].GfxBobLibs.bmd;
+    let bmd_frame_instance_count = 0;
 
     for (const lnd of landscapes) {
-      if (last_bob !== lnd.GfxBobLibs.bmd) {
-        last_bob = lnd.GfxBobLibs.bmd;
-        frame_palette_index_ptr += frame_count_per_bob.get(last_bob)! + 1;
+      for (const level of Object.keys(lnd.GfxFrames)) {
+        bmd_frame_instance_count += new Set(lnd.GfxFrames[parseInt(level)]).size; //paths_index![lnd.GfxBobLibs.bmd] * 1000000 + f * 100 + palettes_index![lnd.GfxPalette[0]]
       }
+    }
+
+    // const total_frames = Array.from(frame_count_per_bob.values()).reduce((s, fs) => s + fs + 1, 0);
+    const frame_palette_index = new Uint32Array(3 * bmd_frame_instance_count);
+
+    let frame_palette_index_ptr = 0;
+    const layers_index = new Map<number, number>();
+    const bmd_frame_ptr = new Map<number, number>();
+    // let last_bob = landscapes[0].GfxBobLibs.bmd;
+
+    for (const lnd of landscapes) {
+      // if (last_bob !== lnd.GfxBobLibs.bmd) {
+      //   last_bob = lnd.GfxBobLibs.bmd;
+      //   frame_palette_index_ptr += frame_count_per_bob.get(last_bob)! + 1;
+      // }
 
       let pal = palettes_index[this.registry.palettes.get(lnd.GfxPalette[0])!.gfxfile];
 
       for (const lvl in lnd.GfxFrames) {
         for (const f of new Set(lnd.GfxFrames[lvl])) {
-          frame_palette_index[frame_palette_index_ptr + f] = pal;
+          frame_palette_index.set([
+            paths_index[lnd.GfxBobLibs.bmd],
+            f,
+            pal,
+          ], 3 * frame_palette_index_ptr);
+          frame_palette_index_ptr += 1;
+
+          const layer = bmd_frame_ptr.get(paths_index[lnd.GfxBobLibs.bmd]) || 0;
+          layers_index.set(paths_index[lnd.GfxBobLibs.bmd] * 1000000 + f * 100 + pal, layer);
+          bmd_frame_ptr.set(paths_index[lnd.GfxBobLibs.bmd], layer + 1);
         }
       }
     }
@@ -107,7 +132,7 @@ export class CulturesResourceManager {
       index: new Uint32Array(palette_paths.length),
       acc_length: 0,
     });
-    
+
     const buf = new Uint8Array(bmd_tables.acc_length);
 
     await Promise.all(paths.map(async (path, i) => {
@@ -136,8 +161,6 @@ export class CulturesResourceManager {
 
     const palettes_buf = new Uint8Array(palette_tables.acc_length);
 
-    console.log(paths[24]);
-
     await Promise.all(palette_paths.map(async (path, i) => {
       const blob = this.fs.open(path);
 
@@ -150,13 +173,16 @@ export class CulturesResourceManager {
       buf,
       palettes_buf,
       bmd_tables.index,
+      new Uint32Array(Array.from(bmd_frame_ptr.entries()).sort((a, b) => paths_index[a[0]] - paths_index[b[0]]).map(a => a[1])),
       bmd_tables.has_shadow,
       palette_tables.index,
       frame_palette_index
     );
 
     return {
+      layers_index,
       paths_index,
+      palettes_index,
       buf: res_buf
     };
   }

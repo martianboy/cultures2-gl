@@ -36,6 +36,7 @@ export interface GfxPalette256 {
   editname: string;
   gfxfile: string;
   gfxpreshade: boolean;
+  gfxremaptopreshaded?: string;
 }
 
 export class CulturesRegistry {

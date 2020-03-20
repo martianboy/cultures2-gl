@@ -83,11 +83,13 @@ function init_program(gl: WebGL2RenderingContext): IProgram {
 export class MapLandscape implements MapLayer {
   private vao: WebGLVertexArrayObject | null;
   private buffers?: GlBuffers;
+  private layers_index?: Map<number, number>;
   private textures?: GlTexture[];
   private program: IProgram;
   private landscape_count: number = 0;
 
   private paths_index?: Record<string, number>;
+  private palettes_index?: Record<string, number>;
 
   constructor(
     private map: CulturesMapData,
@@ -100,10 +102,12 @@ export class MapLandscape implements MapLayer {
   }
 
   async load_texture() {
-    const { buf, paths_index } = await this.rm.load_landscape_bmd();
+    const { buf, paths_index, layers_index, palettes_index } = await this.rm.load_landscape_bmd();
     const view = new SequentialDataView(buf.buffer);
 
+    this.layers_index = layers_index;
     this.paths_index = paths_index;
+    this.palettes_index = palettes_index;
 
     this.textures = Object.values(paths_index).map(idx => {
       let depth = view.getUint32();
@@ -130,14 +134,15 @@ export class MapLandscape implements MapLayer {
     // if (this.paths_index) this.gl.uniform1iv(this.program.uniform_locations.u_textures, Object.values(this.paths_index).slice(0, 16));
 
     const rect_at = (x: number, y: number, w: number, h: number): number[] => {
+      const off = (y % 2) / 2;
       return [
-        x - w / 2, y - h,
-        x + w / 2, y,
-        x - w / 2, y,
+        off + x - w / 2, -y / 2 + (y - h),
+        off + x + w / 2, -y / 2 + y,
+        off + x - w / 2, -y / 2 + y,
 
-        x - w / 2, y - h,
-        x + w / 2, y - h,
-        x + w / 2, y,
+        off + x - w / 2, -y / 2 + (y - h),
+        off + x + w / 2, -y / 2 + (y - h),
+        off + x + w / 2, -y / 2 + y,
       ].map(xx => xx / 2);
     }
 
@@ -187,11 +192,11 @@ export class MapLandscape implements MapLayer {
 
       let level = this.map.landscape_levels[i];
 
-      let x = Math.floor(i / this.map.height / 2);
-      let y = i % (this.map.width * 2);
+      let y = Math.floor(i / this.map.height / 2);
+      let x = i % (this.map.width * 2);
 
-      a_position.set(rect_at(x / 2, y / 2, width / 35, height / 39), buf_pos * 12);
-      a_layer.set(Array(6).fill(lnd.GfxFrames[level][0]), buf_pos * 6);
+      a_position.set(rect_at(x, y, width / 35, height / 39), buf_pos * 12);
+      a_layer.set(Array(6).fill(this.layers_index!.get(this.paths_index![lnd.GfxBobLibs.bmd] * 1000000 + lnd.GfxFrames[level][0] * 100 + this.palettes_index![this.rm.registry.palettes.get(lnd.GfxPalette[0])!.gfxfile]))!, buf_pos * 6);
 
       buf_pos += 1;
 
