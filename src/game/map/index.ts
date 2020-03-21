@@ -88,11 +88,12 @@ function create_map(
 }
 
 export async function load_map(
-  path: string,
   canvas: HTMLCanvasElement,
   rm: CulturesResourceManager
 ) {
-  const map_data = await rm.load_map(path);
+  const map_paths = [...rm.fs.ls()].filter(e => e.path.match(/^data\\maps\\campaign_\d\d_\d\d\\map.dat$/)).sort();
+  const e = map_paths[0];
+  const map_data = await rm.load_map(e!.path);
   const map = create_map(map_data, canvas, rm);
   await map.initialize();
   return map;

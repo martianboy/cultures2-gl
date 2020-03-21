@@ -16,8 +16,8 @@ export interface BmdHeader {
 
 export interface BmdFrameInfo {
   type: number;
-  meta_1: number;
-  meta_2: number;
+  dx: number;
+  dy: number;
   width: number;
   len: number;
   off: number;
@@ -51,19 +51,19 @@ function read_bmd_header(view: SequentialDataView) {
   };
 }
 
-function read_frames(view: SequentialDataView) {
+function read_frames(view: SequentialDataView): BmdFrameInfo[] {
   let magic = view.getUint16();
   if (magic !== 0x03E9) throw new Error('read_frame_info: starting point is incorrect.');
 
   view.skip(6);
 
   let section_length = view.getUint32();
-  let frames = [];
+  let frames: BmdFrameInfo[] = [];
   for (let i = 0; i < section_length / 24; i++) {
     frames.push({
       type: view.getUint32(),
-      meta_1: view.getUint32(),
-      meta_2: view.getUint32(),
+      dx: view.getUint32(),
+      dy: view.getUint32(),
       width: view.getUint32(),
       len: view.getUint32(),
       off: view.getUint32(),

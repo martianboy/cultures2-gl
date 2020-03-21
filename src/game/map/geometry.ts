@@ -5,7 +5,7 @@ export class MapGeometry {
   private base_transformation: m4.Mat4;
 
   public translation: [number, number, 0] = [0, 0, 0];
-  public zoom_factor = 1.0;
+  public zoom_factor = 0.97;
   public width_unit = 70;
   public height_unit = 78;
 
@@ -32,8 +32,8 @@ export class MapGeometry {
   }
 
   translate(dx: number, dy: number) {
-    this.translation[0] = Math.max(-this.map_width + this.width / this.width_unit, Math.min(dx + this.translation[0], 0));
-    this.translation[1] = Math.max(-this.map_height + this.height / this.height_unit, Math.min(dy + this.translation[1], 0));
+    this.translation[0] = Math.max(-this.map_width + this.width / this.width_unit, Math.min(dx + this.translation[0], 5));
+    this.translation[1] = Math.max(-this.map_height + this.height / this.height_unit, Math.min(dy + this.translation[1], 5));
 
     this.transformation = m4.translate(
       this.base_transformation,

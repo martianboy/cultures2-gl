@@ -26,7 +26,8 @@ export async function createGame(fs: CulturesFS, canvas: HTMLCanvasElement, cust
     const map = await load_user_map(custom_map, canvas, resource_manager);
     map.render();
   } else {
-    const map = await load_map('data\\maps\\campaign_01_01\\map.dat', canvas, resource_manager);
+    
+    const map = await load_map(canvas, resource_manager);
     map.render();
   }
   // setTimeout(() => map.stop(), 2000);

@@ -91,6 +91,8 @@ export class MapLandscape implements MapLayer {
   private paths_index?: Record<string, number>;
   private palettes_index?: Record<string, number>;
 
+  private frame_offsets = new Map<number, Int32Array>();
+
   constructor(
     private map: CulturesMapData,
     private gl: WebGL2RenderingContext,
@@ -114,6 +116,7 @@ export class MapLandscape implements MapLayer {
       let width = view.getUint32();
       let height = view.getUint32();
       let encoded_length = view.getUint32();
+      this.frame_offsets.set(idx, new Int32Array(view.slice(depth * 2 * 4)));
 
       let img = new ImageData(new Uint8ClampedArray(view.slice(encoded_length)), width, height * depth);
       return {
@@ -137,15 +140,14 @@ export class MapLandscape implements MapLayer {
     // if (this.paths_index) this.gl.uniform1iv(this.program.uniform_locations.u_textures, Object.values(this.paths_index).slice(0, 16));
 
     const rect_at = (x: number, y: number, w: number, h: number): number[] => {
-      const off = (y % 2) / 2;
+      const off = 0; (y % 2) / 2;
       return [
-        off + x - w, y / 2 - h,
-        off + x + w, y / 2,
-        off + x - w, y / 2,
-
-        off + x - w, y / 2 - h,
-        off + x + w, y / 2 - h,
-        off + x + w, y / 2,
+        off + x    , y - h,
+        off + x + w, y,
+        off + x    , y,
+        off + x    , y - h,
+        off + x + w, y - h,
+        off + x + w, y,
       ];
     }
 
@@ -181,6 +183,10 @@ export class MapLandscape implements MapLayer {
 
     let buf_pos = 0;
 
+    if (!this.paths_index) throw new Error('this.paths_index is not initialized.');
+    if (!this.palettes_index) throw new Error('this.palettes_index is not initialized.');
+    if (!this.layers_index) throw new Error('this.layers_index is not initialized.');
+
     for (let i = 0; i < this.map.width * this.map.height * 4; i++) {
       let lt = this.map.landscape_types[i];
       if (lt > this.map.landscape_index.length) continue;
@@ -188,13 +194,30 @@ export class MapLandscape implements MapLayer {
       let lnd = this.rm.registry.landscapes.get(this.map.landscape_index[lt]);
       if (!lnd || !lnd.GfxBobLibs.bmd.endsWith('ls_trees.bmd')) continue;
 
+      let path_idx = this.paths_index[lnd.GfxBobLibs.bmd];
+      let palette_idx = this.palettes_index[this.rm.registry.palettes.get(lnd.GfxPalette[0])!.gfxfile];
       let level = this.map.landscape_levels[i];
+
+      let layer = this.layers_index.get(path_idx * 1000000 + lnd.GfxFrames[level][0] * 100 + palette_idx);
+      if (layer === undefined) throw new Error(`Layer hash code ${path_idx * 1000000 + lnd.GfxFrames[level][0] * 100 + palette_idx} was not found in the index.`);
+
+      const frame_offsets = this.frame_offsets.get(path_idx);
+      if (frame_offsets === undefined) throw new Error(`Frame offsets not found for path_idx = ${path_idx}`)
 
       let y = Math.floor(i / this.map.height / 2);
       let x = i % (this.map.width * 2);
 
-      a_position.set(rect_at(x / 2, y, width / this.geometry.width_unit / 2, height / this.geometry.height_unit), buf_pos * 12);
-      a_layer.set(Array(6).fill(this.layers_index!.get(this.paths_index![lnd.GfxBobLibs.bmd] * 1000000 + lnd.GfxFrames[level][0] * 100 + this.palettes_index![this.rm.registry.palettes.get(lnd.GfxPalette[0])!.gfxfile]))!, buf_pos * 6);
+      if (lnd.GfxFrames == undefined || lnd.GfxFrames[level] == undefined || lnd.GfxPalette == undefined) debugger;
+
+      let rect = rect_at(
+        x / 2 + frame_offsets[layer * 2 + 0] / this.geometry.width_unit / 2,
+        3.5 + y / 2 + frame_offsets[layer * 2 + 1] / this.geometry.height_unit,
+        2 * width / this.geometry.width_unit / 2,
+        height / this.geometry.height_unit
+      );
+
+      a_position.set(rect, buf_pos * 12);
+      a_layer.set(Array(6).fill(layer), buf_pos * 6);
 
       buf_pos += 1;
 
