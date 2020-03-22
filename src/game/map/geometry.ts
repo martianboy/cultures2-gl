@@ -5,9 +5,9 @@ export class MapGeometry {
   private base_transformation: m4.Mat4;
 
   public translation: [number, number, 0] = [0, 0, 0];
-  public zoom_factor = 0.97;
-  public width_unit = 70;
-  public height_unit = 78;
+  public zoom_factor = 1;
+  public width_unit = 34;
+  public height_unit = 19.5;
 
   public primitive_count: number;
 
@@ -24,8 +24,6 @@ export class MapGeometry {
       1
     ]);
 
-    let vw = Math.ceil((this.width / this.width_unit) / this.zoom_factor) + 1;
-    let vh = 2 * Math.ceil((this.height / this.height_unit) / this.zoom_factor);
     this.primitive_count = 2 * 3 * map_width * map_height;
 
     this.transformation = this.base_transformation;

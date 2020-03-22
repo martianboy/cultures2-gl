@@ -80,7 +80,7 @@ function create_map(
 
   draggable(canvas, {
     onDrag(e) {
-      map.translate(e.dx / 35, e.dy / 39);
+      map.translate(e.dx / 34, e.dy / 9);
     }
   });
 
