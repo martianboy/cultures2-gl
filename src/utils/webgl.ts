@@ -48,14 +48,14 @@ export function load_float_array(buf: Float32Array, location: number, size: numb
       location, size, gl.FLOAT, false, 0, 0);
 }
 
-export function load_uint8_array(buf: Uint8Array, location: number, size: number, gl: WebGL2RenderingContext) {
+export function load_uint32_array(buf: Uint32Array, location: number, size: number, gl: WebGL2RenderingContext) {
   let positionBuffer = gl.createBuffer();
   gl.enableVertexAttribArray(location);
   gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
 
   gl.bufferData(gl.ARRAY_BUFFER, buf, gl.STATIC_DRAW);
-  gl.vertexAttribPointer(
-      location, size, gl.UNSIGNED_BYTE, false, 0, 0);
+  gl.vertexAttribIPointer(
+      location, size, gl.UNSIGNED_INT, 0, 0);
 }
 
 export function define_texture(image: ImageData, index: number, depth: number, gl: WebGL2RenderingContext, options: { MAG_FILTER?: number; MIN_FILTER?: number; } = {}) {

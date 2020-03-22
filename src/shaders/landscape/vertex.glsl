@@ -4,7 +4,7 @@
 // It will receive data from a buffer
 in vec2 a_position;
 in vec2 a_texcoord;
-in int a_texture;
+in float a_texture;
 in float a_layer;
 in float a_brightness;
 
@@ -15,7 +15,7 @@ uniform mat4 u_matrix;
 out vec2 v_texcoord;
 out float layer;
 out float brightness;
-flat out int v_texture;
+flat out float v_texture;
 
 // all shaders have a main function
 void main() {
@@ -24,6 +24,7 @@ void main() {
 
   // Pass the texcoord to the fragment shader.
   v_texcoord = a_texcoord;
+  v_texture = a_texture;
   layer = a_layer;
   brightness = a_brightness;
 }

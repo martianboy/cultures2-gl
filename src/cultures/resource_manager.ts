@@ -43,7 +43,6 @@ export class CulturesResourceManager {
 
     const landscapes = Array.from(this.registry.landscapes.values()).filter(lnd => lnd.GfxBobLibs.bmd.endsWith('ls_trees.bmd'));
     const paths = uniqBy(landscapes.map(p => p.GfxBobLibs), p => p.bmd);
-    console.table(paths);
     // @ts-ignore
     const paths_index: Record<string, number> = Object.fromEntries(Object.entries(paths).map(([k, v]) => [v.bmd, parseInt(k)]));
     landscapes.sort((l1, l2) => paths_index[l1.GfxBobLibs.bmd] - paths_index[l2.GfxBobLibs.bmd]);
@@ -51,57 +50,42 @@ export class CulturesResourceManager {
     const palette_paths = uniq(Array.from(this.registry.palettes.values())).map(p => p.gfxfile);
     const palettes_index = Object.fromEntries(Object.entries(palette_paths).map(([k, v]) => [v, parseInt(k)]));
 
-    // const frame_count_per_bob = landscapes.reduce((m, lnd) => {
-    //   let current = m.get(lnd.GfxBobLibs.bmd) || 0;
-    //   let max_frame = Object.entries(lnd.GfxFrames).reduce((r, [lvl, fs]) => Math.max(r, ...fs), current);
-
-    //   m.set(lnd.GfxBobLibs.bmd, max_frame);
-    //   return m;
-    // }, new Map<string, number>());
-
-    // const bmd_frame_offset = new Map<string, number>();
-    // let last_count = 0;
-    // for (const [p, c] of frame_count_per_bob.entries()) {
-    //   bmd_frame_offset
-    // }
-
-    let bmd_frame_instance_count = 0;
-
+    // Frame instances per BMD file
+    let bmd_frame_instances = new Map<number, Set<number>>(paths.map(p => [paths_index[p.bmd], new Set()]));
     for (const lnd of landscapes) {
+      let c = bmd_frame_instances.get(paths_index[lnd.GfxBobLibs.bmd])!;
+      let pal = palettes_index[this.registry.palettes.get(lnd.GfxPalette[0])!.gfxfile];
+
       for (const level of Object.keys(lnd.GfxFrames)) {
-        bmd_frame_instance_count += new Set(lnd.GfxFrames[parseInt(level)]).size; //paths_index![lnd.GfxBobLibs.bmd] * 1000000 + f * 100 + palettes_index![lnd.GfxPalette[0]]
+        for (const f of lnd.GfxFrames[parseInt(level)]) {
+          c.add(f * 1000 + pal);
+        }
       }
     }
 
-    // const total_frames = Array.from(frame_count_per_bob.values()).reduce((s, fs) => s + fs + 1, 0);
-    const frame_palette_index = new Uint32Array(3 * bmd_frame_instance_count);
+    let bmd_frame_instance_count = [...bmd_frame_instances.values()].reduce((s, c) => s + c.size, 0);
+    const frame_palette_index = new Uint32Array(paths.length * 2 + 2 * bmd_frame_instance_count);
+    frame_palette_index.set(Array.from(bmd_frame_instances.entries()).sort((a, b) => paths_index[a[0]] - paths_index[b[0]]).map(a => a[1].size));
 
-    let frame_palette_index_ptr = 0;
+    // start after bmd_frame_instance_count table
+    let frame_palette_index_ptr = paths.length;
     const layers_index = new Map<number, number>();
     const bmd_frame_ptr = new Map<number, number>();
-    // let last_bob = landscapes[0].GfxBobLibs.bmd;
 
-    for (const lnd of landscapes) {
-      // if (last_bob !== lnd.GfxBobLibs.bmd) {
-      //   last_bob = lnd.GfxBobLibs.bmd;
-      //   frame_palette_index_ptr += frame_count_per_bob.get(last_bob)! + 1;
-      // }
+    for (const [path_idx, frame_instances] of bmd_frame_instances.entries()) {
+      for (const fi of frame_instances) {
+        let pal = fi % 1000;
+        let f = Math.floor(fi / 1000);
 
-      let pal = palettes_index[this.registry.palettes.get(lnd.GfxPalette[0])!.gfxfile];
+        frame_palette_index.set([
+          f,
+          pal,
+        ], frame_palette_index_ptr);
+        frame_palette_index_ptr += 2;
 
-      for (const lvl in lnd.GfxFrames) {
-        for (const f of new Set(lnd.GfxFrames[lvl])) {
-          frame_palette_index.set([
-            paths_index[lnd.GfxBobLibs.bmd],
-            f,
-            pal,
-          ], 3 * frame_palette_index_ptr);
-          frame_palette_index_ptr += 1;
-
-          const layer = bmd_frame_ptr.get(paths_index[lnd.GfxBobLibs.bmd]) || 0;
-          layers_index.set(paths_index[lnd.GfxBobLibs.bmd] * 1000000 + f * 100 + pal, layer);
-          bmd_frame_ptr.set(paths_index[lnd.GfxBobLibs.bmd], layer + 1);
-        }
+        const layer = bmd_frame_ptr.get(path_idx) || 0;
+        layers_index.set(path_idx * 1000000 + fi, layer);
+        bmd_frame_ptr.set(path_idx, layer + 1);
       }
     }
 

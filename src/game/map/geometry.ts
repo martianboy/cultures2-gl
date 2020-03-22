@@ -30,8 +30,8 @@ export class MapGeometry {
   }
 
   translate(dx: number, dy: number) {
-    this.translation[0] = Math.max(-this.map_width + this.width / this.width_unit, Math.min(dx + this.translation[0], 5));
-    this.translation[1] = Math.max(-this.map_height + this.height / this.height_unit, Math.min(dy + this.translation[1], 5));
+    this.translation[0] += dx; //Math.max(-this.map_width + this.width / this.width_unit, Math.min(dx + this.translation[0], 5));
+    this.translation[1] += dy; //Math.max(-this.map_height + this.height / this.height_unit, Math.min(dy + this.translation[1], 5));
 
     this.transformation = m4.translate(
       this.base_transformation,

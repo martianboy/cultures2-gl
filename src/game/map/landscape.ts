@@ -9,8 +9,6 @@ import {
   createShader,
   createProgram,
   load_float_array,
-  load_uint8_array,
-  define_compressed_texture,
   define_texture
 } from "../../utils/webgl";
 
@@ -140,14 +138,14 @@ export class MapLandscape implements MapLayer {
     // if (this.paths_index) this.gl.uniform1iv(this.program.uniform_locations.u_textures, Object.values(this.paths_index).slice(0, 16));
 
     const rect_at = (x: number, y: number, w: number, h: number): number[] => {
-      const off = 0; (y % 2) / 2;
+      const off = (y % 2) / 2;
       return [
-        off + x    , y - h,
-        off + x + w, y,
         off + x    , y,
-        off + x    , y - h,
-        off + x + w, y - h,
+        off + x + w, y + h,
+        off + x    , y + h,
+        off + x    , y,
         off + x + w, y,
+        off + x + w, y + h,
       ];
     }
 
@@ -163,7 +161,7 @@ export class MapLandscape implements MapLayer {
 
     let a_position = new Float32Array(12 * objects.length);
     let a_texcoord = new Float32Array(12 * objects.length);
-    let a_texture = new Uint8Array(6 * objects.length).fill(0);
+    let a_texture = new Float32Array(6 * objects.length).fill(0.0);
     let a_layer = new Float32Array(6 * objects.length);
     let a_brightness = new Float32Array(6 * objects.length).fill(1);
 
@@ -198,21 +196,21 @@ export class MapLandscape implements MapLayer {
       let palette_idx = this.palettes_index[this.rm.registry.palettes.get(lnd.GfxPalette[0])!.gfxfile];
       let level = this.map.landscape_levels[i];
 
-      let layer = this.layers_index.get(path_idx * 1000000 + lnd.GfxFrames[level][0] * 100 + palette_idx);
-      if (layer === undefined) throw new Error(`Layer hash code ${path_idx * 1000000 + lnd.GfxFrames[level][0] * 100 + palette_idx} was not found in the index.`);
+      let layer = this.layers_index.get(path_idx * 1000000 + lnd.GfxFrames[level][0] * 1000 + palette_idx);
+      if (layer === undefined) throw new Error(`Layer hash code ${path_idx * 1000000 + lnd.GfxFrames[level][0] * 1000 + palette_idx} was not found in the index.`);
 
       const frame_offsets = this.frame_offsets.get(path_idx);
       if (frame_offsets === undefined) throw new Error(`Frame offsets not found for path_idx = ${path_idx}`)
 
-      let y = Math.floor(i / this.map.height / 2);
+      let y = Math.floor(i / this.map.width / 2);
       let x = i % (this.map.width * 2);
 
       if (lnd.GfxFrames == undefined || lnd.GfxFrames[level] == undefined || lnd.GfxPalette == undefined) debugger;
 
       let rect = rect_at(
-        x / 2 + frame_offsets[layer * 2 + 0] / this.geometry.width_unit / 2,
-        3.5 + y / 2 + frame_offsets[layer * 2 + 1] / this.geometry.height_unit,
-        2 * width / this.geometry.width_unit / 2,
+        x + frame_offsets[layer * 2 + 0] / this.geometry.width_unit,
+        y + frame_offsets[layer * 2 + 1] / this.geometry.height_unit,
+        width / this.geometry.width_unit,
         height / this.geometry.height_unit
       );
 
@@ -238,7 +236,7 @@ export class MapLandscape implements MapLayer {
       this.gl
     );
 
-    load_uint8_array(
+    load_float_array(
       a_texture,
       this.program.attrib_locations.a_texture,
       1,
