@@ -137,6 +137,26 @@ export class MapLandscape implements MapLayer {
 
     // if (this.paths_index) this.gl.uniform1iv(this.program.uniform_locations.u_textures, Object.values(this.paths_index).slice(0, 16));
 
+    const elevation_at = (x: number, y: number): number => {
+      const el = this.map.elevation;
+      const w = this.map.width;
+
+      const ty = Math.floor(y / 2);
+      const tx = Math.floor(x / 2);
+      const i = ty * w + tx;
+
+      if (x < 2 || x > (w - 1) * 2 || y < 2 || y > (this.map.height - 1) * 2) return 0;
+      if (ty % 2 === x % 2) return el[i] / 16;
+
+      if (y % 2 === 0) {
+        return (el[i] + el[i + 2]) / 32;
+      } else if (x % 2 === 0) {
+        return (el[i] + el[i + w]) / 32;
+      } else {
+        return (el[i + (ty + 1) % 2] + el[i + w + ty % 2]) / 32;
+      }
+    }
+
     const rect_at = (x: number, y: number, w: number, h: number): number[] => {
       const off = (y % 2) / 2;
       return [
@@ -208,8 +228,8 @@ export class MapLandscape implements MapLayer {
       if (lnd.GfxFrames == undefined || lnd.GfxFrames[level] == undefined || lnd.GfxPalette == undefined) debugger;
 
       let rect = rect_at(
-        x + frame_offsets[layer * 2 + 0] / this.geometry.width_unit,
-        y + frame_offsets[layer * 2 + 1] / this.geometry.height_unit,
+        x + frame_offsets[layer * 2 + 0] / this.geometry.width_unit - 0.5 + y % 2,
+        y + frame_offsets[layer * 2 + 1] / this.geometry.height_unit - elevation_at(x, y),
         width / this.geometry.width_unit,
         height / this.geometry.height_unit
       );
