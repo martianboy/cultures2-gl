@@ -133,9 +133,8 @@ export class MapLandscape implements MapLayer {
     this.gl.bindVertexArray(this.vao);
     await this.load_texture();
 
-    const {width, height} = this.textures![0];
-
     // if (this.paths_index) this.gl.uniform1iv(this.program.uniform_locations.u_textures, Object.values(this.paths_index).slice(0, 16));
+    const ENABLED_BMDS = ['ls_trees.bmd', 'ls_ground.bmd'];
 
     const elevation_at = (x: number, y: number): number => {
       const el = this.map.elevation;
@@ -172,7 +171,7 @@ export class MapLandscape implements MapLayer {
     let objects = this.map.landscape_types.filter((lt, i) => {
       if (lt > this.map.landscape_index.length) return false;
       let lnd = this.rm.registry.landscapes.get(this.map.landscape_index[lt]);
-      if (!lnd || !lnd.GfxBobLibs.bmd.endsWith('ls_trees.bmd')) return false;
+      if (!lnd || !ENABLED_BMDS.some(p => lnd!.GfxBobLibs.bmd.endsWith(p))) return false;
 
       return true;
     });
@@ -181,7 +180,7 @@ export class MapLandscape implements MapLayer {
 
     let a_position = new Float32Array(12 * objects.length);
     let a_texcoord = new Float32Array(12 * objects.length);
-    let a_texture = new Float32Array(6 * objects.length).fill(0.0);
+    let a_texture = new Float32Array(6 * objects.length);
     let a_layer = new Float32Array(6 * objects.length);
     let a_brightness = new Float32Array(6 * objects.length).fill(1);
 
@@ -210,7 +209,7 @@ export class MapLandscape implements MapLayer {
       if (lt > this.map.landscape_index.length) continue;
 
       let lnd = this.rm.registry.landscapes.get(this.map.landscape_index[lt]);
-      if (!lnd || !lnd.GfxBobLibs.bmd.endsWith('ls_trees.bmd')) continue;
+      if (!lnd || !ENABLED_BMDS.some(p => lnd!.GfxBobLibs.bmd.endsWith(p))) continue;
 
       let path_idx = this.paths_index[lnd.GfxBobLibs.bmd];
       let palette_idx = this.palettes_index[this.rm.registry.palettes.get(lnd.GfxPalette[0])!.gfxfile];
@@ -227,6 +226,8 @@ export class MapLandscape implements MapLayer {
 
       if (lnd.GfxFrames == undefined || lnd.GfxFrames[level] == undefined || lnd.GfxPalette == undefined) debugger;
 
+      const {width, height} = this.textures![path_idx];
+
       let rect = rect_at(
         x + frame_offsets[layer * 2 + 0] / this.geometry.width_unit - 0.5 + y % 2,
         y + frame_offsets[layer * 2 + 1] / this.geometry.height_unit - elevation_at(x, y),
@@ -236,6 +237,7 @@ export class MapLandscape implements MapLayer {
 
       a_position.set(rect, buf_pos * 12);
       a_layer.set(Array(6).fill(layer), buf_pos * 6);
+      a_texture.set(Array(6).fill(path_idx), buf_pos * 6);
 
       buf_pos += 1;
 

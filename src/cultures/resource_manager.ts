@@ -41,7 +41,8 @@ export class CulturesResourceManager {
 
     console.time('load_landscape_bmd');
 
-    const landscapes = Array.from(this.registry.landscapes.values()).filter(lnd => lnd.GfxBobLibs.bmd.endsWith('ls_trees.bmd'));
+    const ENABLED_BMDS = ['ls_trees.bmd', 'ls_ground.bmd'];
+    const landscapes = Array.from(this.registry.landscapes.values()).filter(lnd => ENABLED_BMDS.some(p => lnd.GfxBobLibs.bmd.endsWith(p)));
     const paths = uniqBy(landscapes.map(p => p.GfxBobLibs), p => p.bmd);
     // @ts-ignore
     const paths_index: Record<string, number> = Object.fromEntries(Object.entries(paths).map(([k, v]) => [v.bmd, parseInt(k)]));
