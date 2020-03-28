@@ -18,12 +18,20 @@ function getState(ev: MouseEvent) {
   return draggables.get(ev.target as unknown as HTMLElement);
 }
 function mousedownHandler(ev: MouseEvent) {
-
   const state = getState(ev);
   if (!state) return;
 
+  if (ev.button !== 1) return;
+
+  ev.preventDefault();
+
   state.isDragging = true;
-  state.origin = {x: ev.clientX, y: ev.clientY};
+  state.origin = {x: ev.movementX, y: ev.movementY};
+
+  let el = ev.target as unknown as HTMLElement;
+  if (el.requestPointerLock) {
+    el.requestPointerLock();
+  };
 
   startDragging(ev.target as unknown as HTMLElement);
 }
@@ -32,22 +40,23 @@ function handleMouseMove(ev: MouseEvent) {
   const state = getState(ev);
   if (!state) return;
 
-  const dx = ev.clientX - state.origin.x;
-  const dy = ev.clientY - state.origin.y;
-
-  state.origin.x = ev.clientX;
-  state.origin.y = ev.clientY;
+  const dx = -ev.movementX;
+  const dy = -ev.movementY;
 
   state.translation = { dx, dy };
   if (state.onDrag) state.onDrag({ dx, dy });
 }
-	
+
 function handleMouseUp(ev: MouseEvent) {
   const state = getState(ev);
   if (!state) return;
 
   state.isDragging = false;
   stopDragging(ev.target as unknown as HTMLElement);
+
+  if (document.exitPointerLock) {
+    document.exitPointerLock();
+  }
 }
 
 function startDragging(el: HTMLElement) {
