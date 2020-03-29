@@ -17,6 +17,7 @@ export class MapGeometry {
     public map_width: number,
     public map_height: number
   ) {
+    this.resize(width, height);
     this.base_transformation = m4.ortho(0, width, height, 0, -1, 1);
     this.base_transformation = m4.scale(this.base_transformation, [
       this.zoom_factor * this.width_unit,
@@ -24,9 +25,9 @@ export class MapGeometry {
       1
     ]);
 
-    this.primitive_count = 2 * 3 * map_width * map_height;
-
     this.transformation = this.base_transformation;
+
+    this.primitive_count = 2 * 3 * map_width * map_height;
   }
 
   translate(dx: number, dy: number) {
@@ -39,9 +40,18 @@ export class MapGeometry {
     );
   }
 
-  // get viewport() {
+  resize(width: number, height: number) {
+    this.width = width;
+    this.height = height;
+    this.base_transformation = m4.ortho(0, width, height, 0, -1, 1);
+    this.base_transformation = m4.scale(this.base_transformation, [
+      this.zoom_factor * this.width_unit,
+      this.zoom_factor * this.height_unit,
+      1
+    ]);
 
-  // }
+    this.translate(0, 0);
+  }
 
   slice2d(arr: Float32Array, size = 3) {
     // debugger;

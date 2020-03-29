@@ -21,7 +21,6 @@ export class CulturesMap {
     rm: CulturesResourceManager
   ) {
     this.gl = gl;
-
     this.geometry = new MapGeometry(
       gl.canvas.width,
       gl.canvas.height,
@@ -31,6 +30,8 @@ export class CulturesMap {
 
     this.ground = new MapGround(map, gl, rm, this.geometry);
     this.landscape = new MapLandscape(map, gl, rm, this.geometry);
+
+    this.attachBehaviors();
   }
 
   async initialize() {
@@ -49,8 +50,30 @@ export class CulturesMap {
     this.translate(0, 0);
   }
 
+  attachBehaviors() {
+    draggable(this.gl.canvas as HTMLCanvasElement, {
+      onDrag: this.onDrag
+    });
+    window.addEventListener('resize', this.onResize, { capture: false });
+    this.onResize();
+  }
+
   translate(dx: number, dy: number) {
     this.geometry.translate(dx, dy);
+  }
+
+  onDrag = ({ dx, dy }: { dx: number; dy: number; }) => {
+    this.translate(dx / 34, dy / 9);
+  }
+
+  onResize = () => {
+    console.log('onResize');
+    const canvas = this.gl.canvas as HTMLCanvasElement;
+
+    canvas.width = document.documentElement.clientWidth;
+    canvas.height = document.documentElement.clientHeight;
+    this.geometry.resize(canvas.width, canvas.height);
+    this.gl.viewport(0, 0, canvas.width, canvas.height);
   }
 
   render = () => {
@@ -77,12 +100,6 @@ function create_map(
   }
 
   const map = new CulturesMap(map_data, gl, rm);
-
-  draggable(canvas, {
-    onDrag(e) {
-      map.translate(e.dx / 34, e.dy / 9);
-    }
-  });
 
   return map;
 }

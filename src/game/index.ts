@@ -19,14 +19,10 @@ export async function createGame(fs: CulturesFS, canvas: HTMLCanvasElement, cust
   const registry = await load_registry(fs);
   const resource_manager = new CulturesResourceManager(fs, registry);
 
-  canvas.width = document.documentElement.clientWidth;
-  canvas.height = document.documentElement.clientHeight;
-
   if (custom_map) {
     const map = await load_user_map(custom_map, canvas, resource_manager);
     map.render();
   } else {
-    
     const map = await load_map(canvas, resource_manager);
     map.render();
   }

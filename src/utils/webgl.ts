@@ -86,7 +86,6 @@ export function define_texture(image: ImageData, index: number, depth: number, g
     gl.UNSIGNED_BYTE,
     image.data
   );
-  gl.generateMipmap(gl.TEXTURE_2D_ARRAY);
 
   return texture;
 }
@@ -133,7 +132,6 @@ export function define_compressed_texture(buf: ArrayBufferView, width: number, h
   //   gl.UNSIGNED_BYTE,
   //   buf
   // );
-  gl.generateMipmap(gl.TEXTURE_2D_ARRAY);
 
   return texture;
 }

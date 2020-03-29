@@ -41,7 +41,21 @@ export class CulturesResourceManager {
 
     console.time('load_landscape_bmd');
 
-    const ENABLED_BMDS = ['ls_trees.bmd', 'ls_ground.bmd'];
+    const ENABLED_BMDS = [
+      "ls_trees.bmd",
+      "ls_ground.bmd",
+      "ls_harbour.bmd",
+      "ls_bridge.bmd",
+      "ls_chest.bmd",
+      "ls_goods.bmd",
+      "ls_mushrooms.bmd",
+      "ls_trees_dead.bmd",
+      "ls_stonehenge.bmd",
+      "ls_statues.bmd",
+      "ls_misc.bmd",
+      "ls_caves.bmd",
+      "ls_beduines.bmd",
+    ];
     const landscapes = Array.from(this.registry.landscapes.values()).filter(lnd => ENABLED_BMDS.some(p => lnd.GfxBobLibs.bmd.endsWith(p)));
     const paths = uniqBy(landscapes.map(p => p.GfxBobLibs), p => p.bmd);
     // @ts-ignore
