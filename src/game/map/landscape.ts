@@ -155,6 +155,7 @@ export class MapLandscape implements MapLayer {
     console.time('landscape#initialize');
     // if (this.paths_index) this.gl.uniform1iv(this.program.uniform_locations.u_textures, Object.values(this.paths_index).slice(0, 16));
     const ENABLED_BMDS = [
+      // "ls_meadows.bmd",
       "ls_trees.bmd",
       "ls_ground.bmd",
       "ls_harbour.bmd",
@@ -191,6 +192,29 @@ export class MapLandscape implements MapLayer {
       }
     };
 
+    const brightness_at = (x: number, y: number): number => {
+      const br = this.map.lighting;
+      const w = this.map.width;
+
+      const ty = Math.floor(y / 2);
+      const tx = Math.floor(x / 2);
+      const i = ty * w + tx;
+
+      const tr = (l: number) => (l - 0x7F) / 0xFF + 1;
+
+      if (x < 2 || x > (w - 1) * 2 || y < 2 || y > (this.map.height - 1) * 2)
+        return 0;
+      if (ty % 2 === x % 2) return tr(br[i])
+
+      if (y % 2 === 0) {
+        return (tr(br[i]) + tr(br[i + 2])) / 2;
+      } else if (x % 2 === 0) {
+        return (tr(br[i]) + tr(br[i + w])) / 2;
+      } else {
+        return (tr(br[i + ((ty + 1) % 2)]) + tr(br[i + w + (ty % 2)])) / 2;
+      }
+    };
+
     const rect_at = (x: number, y: number, w: number, h: number): number[] => {
       const off = (y % 2) / 2;
       return [
@@ -224,7 +248,7 @@ export class MapLandscape implements MapLayer {
     let a_texcoord = new Float32Array(12 * objects.length);
     let a_texture = new Float32Array(6 * objects.length);
     let a_layer = new Float32Array(6 * objects.length);
-    let a_brightness = new Float32Array(6 * objects.length).fill(1);
+    let a_brightness = new Float32Array(6 * objects.length);
 
     a_texcoord.set([0, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1], 0);
 
@@ -299,6 +323,7 @@ export class MapLandscape implements MapLayer {
       a_position.set(rect, buf_pos * 12);
       a_layer.set(Array(6).fill(layer), buf_pos * 6);
       a_texture.set(Array(6).fill(path_idx), buf_pos * 6);
+      a_brightness.set(Array(6).fill(brightness_at(x, y)), buf_pos * 6);
 
       buf_pos += 1;
 

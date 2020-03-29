@@ -32,9 +32,9 @@ function brightnessAtTriA(i: number, map_data: CulturesMapData): [number, number
 
   const coords = triACoords(i, map_data.width);
   return [
-    (lighting[coords[0]]- 0x7F) / 256 + 1,
-    (lighting[coords[1]]- 0x7F) / 256 + 1,
-    (lighting[coords[2]]- 0x7F) / 256 + 1,
+    (lighting[coords[0]] - 0x7F) / 256 + 1,
+    (lighting[coords[1]] - 0x7F) / 256 + 1,
+    (lighting[coords[2]] - 0x7F) / 256 + 1,
   ];
 }
 

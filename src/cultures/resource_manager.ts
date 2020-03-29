@@ -42,6 +42,7 @@ export class CulturesResourceManager {
     console.time('load_landscape_bmd');
 
     const ENABLED_BMDS = [
+      // "ls_meadows.bmd",
       "ls_trees.bmd",
       "ls_ground.bmd",
       "ls_harbour.bmd",
