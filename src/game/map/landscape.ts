@@ -122,16 +122,8 @@ export class MapLandscape implements MapLayer {
       let encoded_length = view.getUint32();
       this.frame_offsets.set(idx, new Int32Array(view.slice(depth * 2 * 4)));
 
-      console.time('landscape#load_texture:ImageData');
-      let img = new ImageData(
-        new Uint8ClampedArray(view.slice(encoded_length)),
-        width,
-        height * depth
-      );
-      console.timeEnd('landscape#load_texture:ImageData');
-
       console.time('landscape#load_texture:define_texture');
-      const texture = define_texture(img, idx, depth, this.gl, {
+      const texture = define_texture(new Uint8ClampedArray(view.slice(encoded_length)), idx, width, height, depth, this.gl, {
         MIN_FILTER: this.gl.NEAREST,
         MAG_FILTER: this.gl.NEAREST
       });

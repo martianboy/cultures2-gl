@@ -209,12 +209,16 @@ export class MapGround implements MapLayer {
     const tex_patterns = define_texture(
       patterns,
       0,
+      256,
+      256,
       pattern_paths.length,
       this.gl
     );
     const tex_transitions = define_texture(
       transitions,
       1,
+      256,
+      256,
       transition_paths.length,
       this.gl
     );

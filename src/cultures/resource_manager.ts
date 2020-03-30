@@ -187,7 +187,7 @@ export class CulturesResourceManager {
     };
   }
 
-  async load_all_patterns(): Promise<{ paths: string[]; image: ImageData; }> {
+  async load_all_patterns(): Promise<{ paths: string[]; image: ArrayBufferView; width: number; height: number }> {
     const { create_2d_texture } = await import('cultures2-wasm');
     const paths = uniq(Array.from(this.registry.patterns.values()).map(p => p.GfxTexture));
 
@@ -212,15 +212,16 @@ export class CulturesResourceManager {
       buf.set(new Uint8Array(tex_buf), index_tables.index[i]);
     }));
     const img_buf = create_2d_texture(256, 256, buf, index_tables.index);
-    const result = new ImageData(Uint8ClampedArray.from(img_buf), 256);
 
     return {
       paths,
-      image: result
+      image: img_buf,
+      width: 256,
+      height: 256
     };
   }
 
-  async load_all_pattern_transitions(): Promise<{ paths: string[]; image: ImageData; }> {
+  async load_all_pattern_transitions(): Promise<{ paths: string[]; image: ArrayBufferView; width: number; height: number; }> {
     const { create_2d_texture_masked } = await import('cultures2-wasm');
 
     const transitions = new Map<string, PatternTransition>();
@@ -258,11 +259,12 @@ export class CulturesResourceManager {
     }));
 
     const img_buf = create_2d_texture_masked(256, 256, buf, index_tables.index, index_tables.mask_index);
-    const result = new ImageData(Uint8ClampedArray.from(img_buf), 256);
 
     return {
       paths,
-      image: result
+      image: img_buf,
+      width: 256,
+      height: 256
     };
   }
 

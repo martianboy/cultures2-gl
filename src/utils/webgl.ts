@@ -58,7 +58,7 @@ export function load_uint32_array(buf: Uint32Array, location: number, size: numb
       location, size, gl.UNSIGNED_INT, 0, 0);
 }
 
-export function define_texture(image: ImageData, index: number, depth: number, gl: WebGL2RenderingContext, options: { MAG_FILTER?: number; MIN_FILTER?: number; } = {}) {
+export function define_texture(buf: ArrayBufferView, index: number, w: number, h: number, depth: number, gl: WebGL2RenderingContext, options: { MAG_FILTER?: number; MIN_FILTER?: number; } = {}) {
   // Create a texture.
   var texture = gl.createTexture();
 
@@ -78,13 +78,13 @@ export function define_texture(image: ImageData, index: number, depth: number, g
     gl.TEXTURE_2D_ARRAY,
     0,
     gl.RGBA,
-    image.width,
-    image.height / depth,
+    w,
+    h,
     depth,
     0,
     gl.RGBA,
     gl.UNSIGNED_BYTE,
-    image.data
+    buf
   );
 
   return texture;
