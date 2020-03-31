@@ -24,6 +24,7 @@ export interface CulturesMapData {
   trans_b2: Uint8Array;
 
   landscape_index: string[];
+  landscape_objects(): IterableIterator<{ i: number; type: number; level: number }>;
   landscape_levels: Uint8Array;
   landscape_types: Uint16Array;
 
@@ -40,6 +41,66 @@ function read_header(view: SequentialDataView) {
     unk4: view.getUint32(),
     unk5: view.getUint32(),
   };
+}
+
+function* u8_iter(buf: ArrayBuffer, nil_value: number): IterableIterator<[number, number]> {
+  let view = new SequentialDataView(buf);
+  let ptr = 0;
+
+  while (!view.eof) {
+    let head = view.getUint8();
+
+    if (head > 0x80) {
+      const value = view.getUint8();
+      if (value !== nil_value) {
+        for (let i = 0; i < head - 0x80; i++) {
+          yield [ptr++, value];
+        }
+      } else {
+        ptr += head - 0x80;
+      }
+    } else {
+      for (let i = 0; i < head; i++) {
+        const value = view.getUint8();
+        if (value !== nil_value) {
+          yield [ptr++, value];
+        } else {
+          ptr += 1;
+        }
+      }
+    }
+  }
+
+}
+
+function* u16_iter(buf: ArrayBuffer, nil_value: number): IterableIterator<[number, number]> {
+  let view = new SequentialDataView(buf);
+  let ptr = 0;
+
+  while (!view.eof) {
+    let head = view.getUint8();
+
+    if (head > 0x80) {
+      const value = view.getUint16();
+      if (value !== nil_value) {
+        for (let i = 0; i < head - 0x80; i++) {
+          yield [ptr++, value];
+        }
+      } else {
+        ptr += head - 0x80;
+      }
+    } else {
+      for (let i = 0; i < head; i++) {
+        const value = view.getUint16();
+        if (value !== nil_value) {
+          yield [ptr++, value];
+        } else {
+          ptr += 1;
+        }
+      }
+    }
+  }
+
 }
 
 export async function read_map_data(blob: Blob): Promise<CulturesMapData> {
@@ -78,6 +139,22 @@ export async function read_map_data(blob: Blob): Promise<CulturesMapData> {
     trans_b2: sections.hoix4tme.content.data,
 
     landscape_index: sections.hoixdlae.content.dictionary,
+    landscape_objects: function* () {
+      let alme_iter = u16_iter(sections.hoixalme.content.data, 0xFFFF);
+
+      for (;;) {
+        let alme_next = alme_iter.next();
+
+        if (alme_next.done) return;
+
+        yield {
+          i: alme_next.value[0],
+          type: alme_next.value[1],
+          level: sections.hoixvlml.content.data[alme_next.value[0]],
+        };
+      }
+    },
+
     landscape_types: sections.hoixalme.content.data,
     landscape_levels: sections.hoixvlml.content.data,
 

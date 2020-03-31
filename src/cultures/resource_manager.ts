@@ -9,7 +9,7 @@ import {uniq, uniqBy} from 'lodash-es';
 import { WorkerPool } from '../utils/worker_pool';
 
 // eslint-disable-next-line import/no-webpack-loader-syntax
-const worker = require('workerize-loader!./rm.worker');
+// const worker = require('workerize-loader!./rm.worker');
 
 export class CulturesResourceManager {
   fs: CulturesFS;

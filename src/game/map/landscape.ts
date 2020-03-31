@@ -29,10 +29,10 @@ interface IProgram {
 
 interface GlBuffers {
   a_position: Float32Array;
-  a_texcoord: Float32Array;
-  a_texture: Uint32Array;
+  // a_texcoord: Float32Array;
+  // a_texture: Uint32Array;
   a_layer: Float32Array;
-  a_brightness: Float32Array;
+  // a_brightness: Float32Array;
 }
 
 interface GlTexture {
@@ -90,6 +90,10 @@ export class MapLandscape implements MapLayer {
   private palettes_index?: Record<string, number>;
 
   private frame_offsets = new Map<number, Int32Array>();
+  private animation_timer?: number;
+  private initial_draw: boolean = false;
+  private time: number = 0;
+  private objects: { i: number; type: number; level: number; frame?: number; }[] = [];
 
   constructor(
     private map: CulturesMapData,
@@ -140,28 +144,26 @@ export class MapLandscape implements MapLayer {
     console.timeEnd('landscape#load_texture');
   }
 
-  async initialize() {
-    this.gl.bindVertexArray(this.vao);
-    await this.load_texture();
+  tick = () => {
+    if (!this.paths_index || !this.palettes_index || !this.layers_index || !this.buffers || !this.textures) return;
 
-    console.time('landscape#initialize');
-    // if (this.paths_index) this.gl.uniform1iv(this.program.uniform_locations.u_textures, Object.values(this.paths_index).slice(0, 16));
-    const ENABLED_BMDS = [
-      // "ls_meadows.bmd",
-      "ls_trees.bmd",
-      "ls_ground.bmd",
-      "ls_harbour.bmd",
-      "ls_bridge.bmd",
-      "ls_chest.bmd",
-      "ls_goods.bmd",
-      "ls_mushrooms.bmd",
-      "ls_trees_dead.bmd",
-      "ls_stonehenge.bmd",
-      "ls_statues.bmd",
-      "ls_misc.bmd",
-      "ls_caves.bmd",
-      "ls_beduines.bmd",
-    ];
+    const rect_at = (x: number, y: number, w: number, h: number): number[] => {
+      const off = (y % 2) / 2;
+      return [
+        off + x,
+        y,
+        off + x + w,
+        y + h,
+        off + x,
+        y + h,
+        off + x,
+        y,
+        off + x + w,
+        y,
+        off + x + w,
+        y + h
+      ];
+    };
 
     const elevation_at = (x: number, y: number): number => {
       const el = this.map.elevation;
@@ -183,6 +185,114 @@ export class MapLandscape implements MapLayer {
         return (el[i + ((ty + 1) % 2)] + el[i + w + (ty % 2)]) / 32;
       }
     };
+
+    const { a_layer, a_position } = this.buffers;
+    let buf_pos = 0;
+    
+    this.time += 1;
+
+    for (const object of this.objects) {
+      let { i, type, level } = object;
+
+      let lnd = this.rm.registry.landscapes.get(this.map.landscape_index[type]);
+      if (!lnd || (this.initial_draw && !lnd.GfxLoopAnimation)) {
+        buf_pos += 1;
+        continue;
+      }
+
+      if (lnd.GfxFrames[level] === undefined) {
+        level = Math.max(...Object.keys(lnd.GfxFrames).map(Number));
+      }
+
+      object.frame = lnd.GfxFrames[level][this.time % lnd.GfxFrames[level].length];
+
+      let path_idx = this.paths_index[lnd.GfxBobLibs.bmd];
+      let palette_idx = this.palettes_index[
+        this.rm.registry.palettes.get(lnd.GfxPalette[0])!.gfxfile
+      ];
+
+      let layer = this.layers_index.get(
+        path_idx * 1000000 + object.frame * 1000 + palette_idx
+      );
+      if (layer === undefined) {
+        throw new Error(
+          `Layer hash code ${path_idx * 1000000 +
+            object.frame * 1000 +
+            palette_idx} was not found in the index.`
+        );
+      }
+
+      const frame_offsets = this.frame_offsets.get(path_idx);
+      if (frame_offsets === undefined)
+        throw new Error(`Frame offsets not found for path_idx = ${path_idx}`);
+
+      let y = Math.floor(i / this.map.width / 2);
+      let x = i % (this.map.width * 2);
+
+      const { width, height } = this.textures[path_idx];
+
+      let rect = rect_at(
+        x +
+          frame_offsets[layer * 2 + 0] / this.geometry.width_unit -
+          0.5 +
+          (y % 2),
+        y +
+          frame_offsets[layer * 2 + 1] / this.geometry.height_unit -
+          elevation_at(x, y),
+        width / this.geometry.width_unit,
+        height / this.geometry.height_unit
+      );
+
+      a_position.set(rect, buf_pos * 12);
+      a_layer.set(Array(6).fill(layer), buf_pos * 6);
+
+      buf_pos += 1;
+    }
+
+    this.gl.bindVertexArray(this.vao);
+
+    load_float_array(
+      a_position,
+      this.program.attrib_locations.a_position,
+      2,
+      this.gl
+    );
+
+    load_float_array(
+      a_layer,
+      this.program.attrib_locations.a_layer,
+      1,
+      this.gl
+    );
+
+    this.initial_draw = true;
+    this.animation_timer = setTimeout(this.tick, 60);
+  }
+
+  async initialize() {
+    this.gl.bindVertexArray(this.vao);
+    await this.load_texture();
+
+    this.animation_timer = setTimeout(this.tick, 60);
+
+    console.time('landscape#initialize');
+    // if (this.paths_index) this.gl.uniform1iv(this.program.uniform_locations.u_textures, Object.values(this.paths_index).slice(0, 16));
+    const ENABLED_BMDS = [
+      // "ls_meadows.bmd",
+      "ls_trees.bmd",
+      "ls_ground.bmd",
+      "ls_harbour.bmd",
+      "ls_bridge.bmd",
+      "ls_chest.bmd",
+      "ls_goods.bmd",
+      "ls_mushrooms.bmd",
+      "ls_trees_dead.bmd",
+      "ls_stonehenge.bmd",
+      "ls_statues.bmd",
+      "ls_misc.bmd",
+      "ls_caves.bmd",
+      "ls_beduines.bmd",
+    ];
 
     const brightness_at = (x: number, y: number): number => {
       const br = this.map.lighting;
@@ -207,44 +317,27 @@ export class MapLandscape implements MapLayer {
       }
     };
 
-    const rect_at = (x: number, y: number, w: number, h: number): number[] => {
-      const off = (y % 2) / 2;
-      return [
-        off + x,
-        y,
-        off + x + w,
-        y + h,
-        off + x,
-        y + h,
-        off + x,
-        y,
-        off + x + w,
-        y,
-        off + x + w,
-        y + h
-      ];
-    };
-
-    let objects = this.map.landscape_types.filter((lt, i) => {
-      if (lt > this.map.landscape_index.length) return false;
-      let lnd = this.rm.registry.landscapes.get(this.map.landscape_index[lt]);
-      if (!lnd || !ENABLED_BMDS.some(p => lnd!.GfxBobLibs.bmd.endsWith(p)))
-        return false;
-
-      return true;
+    this.objects = Array.from(this.map.landscape_objects()).filter(({ type }) => {
+      let lnd = this.rm.registry.landscapes.get(this.map.landscape_index[type]);
+      return (lnd && ENABLED_BMDS.some(p => lnd!.GfxBobLibs.bmd.endsWith(p)))
     });
 
-    this.landscape_count = objects.length;
+    this.landscape_count = this.objects.length;
 
-    let a_position = new Float32Array(12 * objects.length);
-    let a_texcoord = new Float32Array(12 * objects.length);
-    let a_texture = new Float32Array(6 * objects.length);
-    let a_layer = new Float32Array(6 * objects.length);
-    let a_brightness = new Float32Array(6 * objects.length);
+    let a_position = new Float32Array(12 * this.landscape_count);
+    let a_texcoord = new Float32Array(12 * this.landscape_count);
+    let a_texture = new Float32Array(6 * this.landscape_count);
+    let a_layer = new Float32Array(6 * this.landscape_count);
+    let a_brightness = new Float32Array(6 * this.landscape_count);
+
+    this.buffers = {
+      a_position,
+      a_layer,
+    };
 
     a_texcoord.set([0, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1], 0);
 
-    for (let i = 1; i < objects.length; i++) {
+    for (let i = 1; i < this.landscape_count; i++) {
       a_texcoord.copyWithin(i * 12, 0, 12);
     }
 
@@ -257,81 +350,32 @@ export class MapLandscape implements MapLayer {
     if (!this.layers_index)
       throw new Error("this.layers_index is not initialized.");
 
-    for (let i = 0; i < this.map.width * this.map.height * 4; i++) {
-      let lt = this.map.landscape_types[i];
-      if (lt > this.map.landscape_index.length) continue;
+    console.time('landscape#initialize:mainLoop');
+    for (let object of this.objects) {
+      let { i, type, level } = object;
 
-      let lnd = this.rm.registry.landscapes.get(this.map.landscape_index[lt]);
-      if (!lnd || !ENABLED_BMDS.some(p => lnd!.GfxBobLibs.bmd.endsWith(p)))
-        continue;
+      let lnd = this.rm.registry.landscapes.get(this.map.landscape_index[type]);
+      if (!lnd) continue;
+
+      if (lnd.GfxFrames[level] === undefined) {
+        level = Math.max(...Object.keys(lnd.GfxFrames).map(Number));
+      }
+      object.frame = lnd.GfxFrames[level][0];
 
       let path_idx = this.paths_index[lnd.GfxBobLibs.bmd];
-      let palette_idx = this.palettes_index[
-        this.rm.registry.palettes.get(lnd.GfxPalette[0])!.gfxfile
-      ];
-      let level = this.map.landscape_levels[i];
-      if (lnd.GfxFrames[level] === undefined) {
-        level = this.map.landscape_levels[i] = Math.max(...Object.keys(lnd.GfxFrames).map(Number));
-      }
-
-      let layer = this.layers_index.get(
-        path_idx * 1000000 + lnd.GfxFrames[level][0] * 1000 + palette_idx
-      );
-      if (layer === undefined)
-        throw new Error(
-          `Layer hash code ${path_idx * 1000000 +
-            lnd.GfxFrames[level][0] * 1000 +
-            palette_idx} was not found in the index.`
-        );
-
-      const frame_offsets = this.frame_offsets.get(path_idx);
-      if (frame_offsets === undefined)
-        throw new Error(`Frame offsets not found for path_idx = ${path_idx}`);
 
       let y = Math.floor(i / this.map.width / 2);
       let x = i % (this.map.width * 2);
 
-      if (
-        lnd.GfxFrames == undefined ||
-        lnd.GfxFrames[level] == undefined ||
-        lnd.GfxPalette == undefined
-      )
-        debugger;
-
-      const { width, height } = this.textures![path_idx];
-
-      let rect = rect_at(
-        x +
-          frame_offsets[layer * 2 + 0] / this.geometry.width_unit -
-          0.5 +
-          (y % 2),
-        y +
-          frame_offsets[layer * 2 + 1] / this.geometry.height_unit -
-          elevation_at(x, y),
-        width / this.geometry.width_unit,
-        height / this.geometry.height_unit
-      );
-
-      a_position.set(rect, buf_pos * 12);
-      a_layer.set(Array(6).fill(layer), buf_pos * 6);
       a_texture.set(Array(6).fill(path_idx), buf_pos * 6);
       a_brightness.set(Array(6).fill(brightness_at(x, y)), buf_pos * 6);
 
       buf_pos += 1;
-
-      // this.landscape_count += 1;
     }
-
+    console.timeEnd('landscape#initialize:mainLoop');
     console.timeEnd('landscape#initialize');
 
     console.time('landscape#initialize:loadBuffers');
-
-    load_float_array(
-      a_position,
-      this.program.attrib_locations.a_position,
-      2,
-      this.gl
-    );
 
     load_float_array(
       a_texcoord,
@@ -343,13 +387,6 @@ export class MapLandscape implements MapLayer {
     load_float_array(
       a_texture,
       this.program.attrib_locations.a_texture,
-      1,
-      this.gl
-    );
-
-    load_float_array(
-      a_layer,
-      this.program.attrib_locations.a_layer,
       1,
       this.gl
     );

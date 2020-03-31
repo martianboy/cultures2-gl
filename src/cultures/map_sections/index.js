@@ -1,6 +1,7 @@
 import { common_decoding } from './common';
 import { common_decoding2 } from './common2';
 import { dictionary } from './dictionary';
+import { raw } from './raw';
 
 export * from './hoixzisl';
 
@@ -36,4 +37,4 @@ export const hoix3tme = common_decoding;
 export const hoix4tme = common_decoding;
 
 export const hoixdlae = dictionary;
-export const hoixalme = common_decoding2;
+export const hoixalme = raw;

@@ -147,7 +147,7 @@ export class WorkerPool {
   createWorker() {
     const worker = this.instantiator();
 
-    setImmediate(() => this.dispatchWorkers());
+    queueMicrotask(() => this.dispatchWorkers());
 
     return worker;
   }
