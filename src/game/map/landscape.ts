@@ -148,19 +148,18 @@ export class MapLandscape implements MapLayer {
     if (!this.paths_index || !this.palettes_index || !this.layers_index || !this.buffers || !this.textures) return;
 
     const rect_at = (x: number, y: number, w: number, h: number): number[] => {
-      const off = (y % 2) / 2;
       return [
-        off + x,
+        x,
         y,
-        off + x + w,
+        x + w,
         y + h,
-        off + x,
+        x,
         y + h,
-        off + x,
+        x,
         y,
-        off + x + w,
+        x + w,
         y,
-        off + x + w,
+        x + w,
         y + h
       ];
     };
@@ -231,14 +230,12 @@ export class MapLandscape implements MapLayer {
 
       const { width, height } = this.textures[path_idx];
 
+      let rx = x + frame_offsets[layer * 2 + 0] / this.geometry.width_unit + (y % 2) * 0.5;
+      let ry = y + frame_offsets[layer * 2 + 1] / this.geometry.height_unit - elevation_at(x, y);
+
       let rect = rect_at(
-        x +
-          frame_offsets[layer * 2 + 0] / this.geometry.width_unit -
-          0.5 +
-          (y % 2),
-        y +
-          frame_offsets[layer * 2 + 1] / this.geometry.height_unit -
-          elevation_at(x, y),
+        rx,
+        ry,
         width / this.geometry.width_unit,
         height / this.geometry.height_unit
       );
