@@ -21,7 +21,7 @@ function mousedownHandler(ev: MouseEvent) {
   const state = getState(ev);
   if (!state) return;
 
-  if (ev.button !== 1) return;
+  // if (ev.button !== 1) return;
 
   ev.preventDefault();
 
