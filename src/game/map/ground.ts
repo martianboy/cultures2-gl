@@ -10,7 +10,7 @@ import { get_texture_buf } from "./texture";
 import {
   createShader,
   createProgram,
-  load_float_array,
+  create_float_array,
   define_texture
 } from "../../utils/webgl";
 
@@ -157,49 +157,49 @@ export class MapGround implements MapLayer {
       a_brightness: brightness
     };
 
-    load_float_array(
+    create_float_array(
       this.buffers.a_position,
       this.program.attrib_locations.a_position,
       2,
       this.gl
     );
-    load_float_array(
+    create_float_array(
       this.buffers.a_texcoord,
       this.program.attrib_locations.a_texcoord,
       2,
       this.gl
     );
-    load_float_array(
+    create_float_array(
       this.buffers.a_layer,
       this.program.attrib_locations.a_layer,
       1,
       this.gl
     );
-    load_float_array(
+    create_float_array(
       this.buffers.a_transcoord1,
       this.program.attrib_locations.a_transcoord1,
       2,
       this.gl
     );
-    load_float_array(
+    create_float_array(
       this.buffers.a_trans_layer1,
       this.program.attrib_locations.a_trans_layer1,
       1,
       this.gl
     );
-    load_float_array(
+    create_float_array(
       this.buffers.a_transcoord2,
       this.program.attrib_locations.a_transcoord2,
       2,
       this.gl
     );
-    load_float_array(
+    create_float_array(
       this.buffers.a_trans_layer2,
       this.program.attrib_locations.a_trans_layer2,
       1,
       this.gl
     );
-    load_float_array(
+    create_float_array(
       this.buffers.a_brightness,
       this.program.attrib_locations.a_brightness,
       1,

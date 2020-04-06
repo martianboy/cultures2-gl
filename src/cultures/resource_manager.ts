@@ -6,7 +6,7 @@ import { read_map_data } from './map';
 
 import {uniq, uniqBy} from 'lodash-es';
 
-import { WorkerPool } from '../utils/worker_pool';
+// import { WorkerPool } from '../utils/worker_pool';
 
 // eslint-disable-next-line import/no-webpack-loader-syntax
 // const worker = require('workerize-loader!./rm.worker');
@@ -42,7 +42,7 @@ export class CulturesResourceManager {
     console.time('load_landscape_bmd');
 
     const ENABLED_BMDS = [
-      // "ls_meadows.bmd",
+      "ls_meadows.bmd",
       "ls_trees.bmd",
       "ls_ground.bmd",
       "ls_harbour.bmd",
@@ -53,6 +53,7 @@ export class CulturesResourceManager {
       "ls_trees_dead.bmd",
       "ls_stonehenge.bmd",
       "ls_statues.bmd",
+      "ls_water.bmd",
       "ls_misc.bmd",
       "ls_caves.bmd",
       "ls_beduines.bmd",

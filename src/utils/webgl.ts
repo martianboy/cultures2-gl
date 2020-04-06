@@ -38,24 +38,33 @@ export function createProgram(gl: WebGL2RenderingContext, vertexShader: WebGLSha
   throw new Error("Program setup failed.");
 }
 
-export function load_float_array(buf: Float32Array, location: number, size: number, gl: WebGL2RenderingContext) {
-  let positionBuffer = gl.createBuffer();
-  gl.enableVertexAttribArray(location);
-  gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+export function create_float_array(buf: Float32Array, location: number, size: number, gl: WebGL2RenderingContext) {
+  let glBuf = gl.createBuffer();
+  if (!glBuf) throw new Error('Failed to create GL buffer.');
 
-  gl.bufferData(gl.ARRAY_BUFFER, buf, gl.STATIC_DRAW);
+  gl.enableVertexAttribArray(location);
+  load_float_array(glBuf, buf, gl);
   gl.vertexAttribPointer(
       location, size, gl.FLOAT, false, 0, 0);
+
+  return glBuf;
 }
 
-export function load_uint32_array(buf: Uint32Array, location: number, size: number, gl: WebGL2RenderingContext) {
-  let positionBuffer = gl.createBuffer();
+export function load_float_array(glBuf: WebGLBuffer, buf: Float32Array, gl: WebGL2RenderingContext) {
+  gl.bindBuffer(gl.ARRAY_BUFFER, glBuf);
+  gl.bufferData(gl.ARRAY_BUFFER, buf, gl.STATIC_DRAW);
+}
+
+export function create_uint32_array(buf: Uint32Array, location: number, size: number, gl: WebGL2RenderingContext) {
+  let glBuf = gl.createBuffer();
   gl.enableVertexAttribArray(location);
-  gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+  gl.bindBuffer(gl.ARRAY_BUFFER, glBuf);
 
   gl.bufferData(gl.ARRAY_BUFFER, buf, gl.STATIC_DRAW);
   gl.vertexAttribIPointer(
       location, size, gl.UNSIGNED_INT, 0, 0);
+
+  return glBuf;
 }
 
 export function define_texture(buf: ArrayBufferView, index: number, w: number, h: number, depth: number, gl: WebGL2RenderingContext, options: { MAG_FILTER?: number; MIN_FILTER?: number; } = {}) {

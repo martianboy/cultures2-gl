@@ -8,8 +8,9 @@ import { MapLayer } from "./interfaces";
 import {
   createShader,
   createProgram,
-  load_float_array,
-  define_texture
+  create_float_array,
+  define_texture,
+  load_float_array
 } from "../../utils/webgl";
 
 import vertexShaderSource from "../../shaders/landscape/vertex.glsl";
@@ -27,12 +28,17 @@ interface IProgram {
   >;
 }
 
-interface GlBuffers {
+interface Buffers {
   a_position: Float32Array;
   // a_texcoord: Float32Array;
   // a_texture: Uint32Array;
   a_layer: Float32Array;
   // a_brightness: Float32Array;
+}
+
+interface GlBuffers {
+  a_position?: WebGLBuffer;
+  a_layer?: WebGLBuffer;
 }
 
 interface GlTexture {
@@ -80,7 +86,8 @@ function init_program(gl: WebGL2RenderingContext): IProgram {
 
 export class MapLandscape implements MapLayer {
   private vao: WebGLVertexArrayObject | null;
-  private buffers?: GlBuffers;
+  private buffers?: Buffers;
+  private gl_buffers: GlBuffers = {};
   private layers_index?: Map<number, number>;
   private textures?: GlTexture[];
   private program: IProgram;
@@ -144,46 +151,44 @@ export class MapLandscape implements MapLayer {
     console.timeEnd('landscape#load_texture');
   }
 
+  rect_at = (buf: Float32Array, offset: number, x: number, y: number, w: number, h: number) => {
+    buf[offset + 0] = x;
+    buf[offset + 1] = y;
+    buf[offset + 2] = x + w;
+    buf[offset + 3] = y + h;
+    buf[offset + 4] = x;
+    buf[offset + 5] = y + h;
+    buf[offset + 6] = x;
+    buf[offset + 7] = y;
+    buf[offset + 8] = x + w;
+    buf[offset + 9] = y;
+    buf[offset + 10] = x + w;
+    buf[offset + 11] = y + h;
+  };
+
+  elevation_at = (x: number, y: number): number => {
+    const el = this.map.elevation;
+    const w = this.map.width;
+
+    const ty = Math.floor(y / 2);
+    const tx = Math.floor(x / 2);
+    const i = ty * w + tx;
+
+    if (x < 2 || x > (w - 1) * 2 || y < 2 || y > (this.map.height - 1) * 2)
+      return 0;
+    if (ty % 2 === x % 2) return el[i] / 16;
+
+    if (y % 2 === 0) {
+      return (el[i] + el[i + 2]) / 32;
+    } else if (x % 2 === 0) {
+      return (el[i] + el[i + w]) / 32;
+    } else {
+      return (el[i + ((ty + 1) % 2)] + el[i + w + (ty % 2)]) / 32;
+    }
+  };
+
   tick = () => {
     if (!this.paths_index || !this.palettes_index || !this.layers_index || !this.buffers || !this.textures) return;
-
-    const rect_at = (x: number, y: number, w: number, h: number): number[] => {
-      return [
-        x,
-        y,
-        x + w,
-        y + h,
-        x,
-        y + h,
-        x,
-        y,
-        x + w,
-        y,
-        x + w,
-        y + h
-      ];
-    };
-
-    const elevation_at = (x: number, y: number): number => {
-      const el = this.map.elevation;
-      const w = this.map.width;
-
-      const ty = Math.floor(y / 2);
-      const tx = Math.floor(x / 2);
-      const i = ty * w + tx;
-
-      if (x < 2 || x > (w - 1) * 2 || y < 2 || y > (this.map.height - 1) * 2)
-        return 0;
-      if (ty % 2 === x % 2) return el[i] / 16;
-
-      if (y % 2 === 0) {
-        return (el[i] + el[i + 2]) / 32;
-      } else if (x % 2 === 0) {
-        return (el[i] + el[i + w]) / 32;
-      } else {
-        return (el[i + ((ty + 1) % 2)] + el[i + w + (ty % 2)]) / 32;
-      }
-    };
 
     const { a_layer, a_position } = this.buffers;
     let buf_pos = 0;
@@ -231,16 +236,18 @@ export class MapLandscape implements MapLayer {
       const { width, height } = this.textures[path_idx];
 
       let rx = x + frame_offsets[layer * 2 + 0] / this.geometry.width_unit + (y % 2) * 0.5;
-      let ry = y + frame_offsets[layer * 2 + 1] / this.geometry.height_unit - elevation_at(x, y);
+      let ry = y + frame_offsets[layer * 2 + 1] / this.geometry.height_unit - this.elevation_at(x, y);
 
-      let rect = rect_at(
+      this.rect_at(
+        a_position,
+        buf_pos * 12,
+
         rx,
         ry,
         width / this.geometry.width_unit,
         height / this.geometry.height_unit
       );
 
-      a_position.set(rect, buf_pos * 12);
       a_layer.set(Array(6).fill(layer), buf_pos * 6);
 
       buf_pos += 1;
@@ -248,21 +255,30 @@ export class MapLandscape implements MapLayer {
 
     this.gl.bindVertexArray(this.vao);
 
-    load_float_array(
-      a_position,
-      this.program.attrib_locations.a_position,
-      2,
-      this.gl
-    );
+    if (!this.gl_buffers.a_position) {
+      this.gl_buffers.a_position = create_float_array(
+        a_position,
+        this.program.attrib_locations.a_position,
+        2,
+        this.gl
+      );
+    } else {
+      load_float_array(this.gl_buffers.a_position, a_position, this.gl);
+    }
 
-    load_float_array(
-      a_layer,
-      this.program.attrib_locations.a_layer,
-      1,
-      this.gl
-    );
+    if (!this.gl_buffers.a_layer) {
+      this.gl_buffers.a_layer = create_float_array(
+        a_layer,
+        this.program.attrib_locations.a_layer,
+        1,
+        this.gl
+      );
+    } else {
+      load_float_array(this.gl_buffers.a_layer, a_layer, this.gl);
+    }
 
     this.initial_draw = true;
+
     this.animation_timer = setTimeout(this.tick, 60);
   }
 
@@ -275,7 +291,7 @@ export class MapLandscape implements MapLayer {
     console.time('landscape#initialize');
     // if (this.paths_index) this.gl.uniform1iv(this.program.uniform_locations.u_textures, Object.values(this.paths_index).slice(0, 16));
     const ENABLED_BMDS = [
-      // "ls_meadows.bmd",
+      "ls_meadows.bmd",
       "ls_trees.bmd",
       "ls_ground.bmd",
       "ls_harbour.bmd",
@@ -286,6 +302,7 @@ export class MapLandscape implements MapLayer {
       "ls_trees_dead.bmd",
       "ls_stonehenge.bmd",
       "ls_statues.bmd",
+      "ls_water.bmd",
       "ls_misc.bmd",
       "ls_caves.bmd",
       "ls_beduines.bmd",
@@ -374,21 +391,21 @@ export class MapLandscape implements MapLayer {
 
     console.time('landscape#initialize:loadBuffers');
 
-    load_float_array(
+    create_float_array(
       a_texcoord,
       this.program.attrib_locations.a_texcoord,
       2,
       this.gl
     );
 
-    load_float_array(
+    create_float_array(
       a_texture,
       this.program.attrib_locations.a_texture,
       1,
       this.gl
     );
 
-    load_float_array(
+    create_float_array(
       a_brightness,
       this.program.attrib_locations.a_brightness,
       1,

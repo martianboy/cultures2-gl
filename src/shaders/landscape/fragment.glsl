@@ -10,7 +10,7 @@ in float layer;
 in float brightness;
 
 // The texture.
-uniform sampler2DArray[13] u_textures;
+uniform sampler2DArray[14] u_textures;
 
 // we need to declare an output for the fragment shader
 out vec4 outColor;
@@ -30,7 +30,7 @@ void main() {
   if (v_texture == 10.0) texel = texture(u_textures[10], vec3(v_texcoord, layer));
   if (v_texture == 11.0) texel = texture(u_textures[11], vec3(v_texcoord, layer));
   if (v_texture == 12.0) texel = texture(u_textures[12], vec3(v_texcoord, layer));
-  // if (v_texture == 13.0) texel = texture(u_textures[13], vec3(v_texcoord, layer));
+  if (v_texture == 13.0) texel = texture(u_textures[13], vec3(v_texcoord, layer));
 
   outColor = vec4(texel.rgb * brightness, texel.a);
 }
