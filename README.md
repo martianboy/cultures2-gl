@@ -1,44 +1,18 @@
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+# Cultures 2 gl
+This is a webgl renderer of cultures 2 maps.
 
-## Available Scripts
+# Building/running
+This project needs the [cultures2-wasm](https://github.com/martianboy/cultures2-wasm) project in the same folder as this project directory is.
+That means `cultures2-wasm` and `cultures2-gl` are in the same folder.
+Additionally, `cultures2-wasm` has to be fully built first to be able to use `cultures2-gl`.
 
-In the project directory, you can run:
+A moderately new version of node is required; tested with v12.20.0 and developed with v13.11.0.
 
-### `npm start`
+A fully automatic server can be started by executing `npx webpack-dev-server`.
+In the console output you should be able to find the url where the integrated webserver is reachable. In the browser, open the developer console (typically F12) to be able to catch any errors.
 
-Runs the app in the development mode.<br />
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+Now find your game directory and locate `DataX\Libs\data0001.lib`. Drag and drop this file onto the webpage and wait.
+The terrain should be visible fairly soon, but it takes some time to load all landscape elements.
 
-The page will reload if you make edits.<br />
-You will also see any lint errors in the console.
-
-### `npm test`
-
-Launches the test runner in the interactive watch mode.<br />
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
-
-### `npm run build`
-
-Builds the app for production to the `build` folder.<br />
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.<br />
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
-
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
-
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
+When loading is finished, the map is explorable by holding down any mouse button.
+ 
