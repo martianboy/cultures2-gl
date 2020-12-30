@@ -1,23 +1,27 @@
 const path = require("path");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
-const InterpolateHtmlPlugin = require("interpolate-html-plugin");
+// const InterpolateHtmlPlugin = require("interpolate-html-plugin");
 
 module.exports = {
   mode: "development",
 
   entry: "./src/index.tsx",
   output: {
-    path: path.resolve(__dirname, "dist"),
     filename: "bundle.js",
     publicPath: "/",
     globalObject: "this"
+  },
+
+  experiments: {
+    // asyncWebAssembly: true,
+    syncWebAssembly: true,
   },
 
   module: {
     rules: [
       {
         test: /\.wasm$/,
-        type: "webassembly/experimental"
+        type: "webassembly/sync"
       },
       {
         test: /\.tsx?$/,
@@ -42,7 +46,10 @@ module.exports = {
   },
 
   resolve: {
-    extensions: [".js", ".ts", ".tsx"]
+    extensions: [".js", ".ts", ".tsx"],
+    fallback: {
+      util: require.resolve('util/')
+    }
   },
 
   plugins: [
@@ -56,9 +63,9 @@ module.exports = {
     // <link rel="icon" href="%PUBLIC_URL%/favicon.ico">
     // It will be an empty string unless you specify "homepage"
     // in `package.json`, in which case it will be the pathname of that URL.
-    new InterpolateHtmlPlugin({
-      PUBLIC_URL: ""
-    })
+    // new InterpolateHtmlPlugin({
+    //   PUBLIC_URL: ""
+    // })
   ],
 
   devServer: {

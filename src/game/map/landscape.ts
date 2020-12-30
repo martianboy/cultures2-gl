@@ -97,7 +97,7 @@ export class MapLandscape implements MapLayer {
   private palettes_index?: Record<string, number>;
 
   private frame_offsets = new Map<number, Int32Array>();
-  private animation_timer?: number;
+  private animation_timer?: NodeJS.Timer;
   private initial_draw: boolean = false;
   private time: number = 0;
   private objects: { i: number; type: number; level: number; frame?: number; }[] = [];
