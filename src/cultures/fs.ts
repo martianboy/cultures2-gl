@@ -90,7 +90,7 @@ function getFiles(n: number, view: SequentialDataView): FileInfo[] {
 }
 
 export async function load_fs(datafile: File): Promise<CulturesFS> {
-  const buffer = await read_file(datafile.slice(0, 200 * 1024));
+  const buffer = await read_file(datafile.slice(0, 250 * 1024));
   const view = new SequentialDataView(buffer);
 
   const header = getHeader(view);
