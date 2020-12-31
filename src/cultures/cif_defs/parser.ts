@@ -4,11 +4,11 @@ export type CifSectionName = keyof typeof defs;
 
 function naive_parser(section: { name: any; items: any; }) {
   switch (section.name) {
-    case 'text':
-      return {
-        name: 'text',
-        items: section.items
-      };
+    // case 'text':
+    //   return {
+    //     name: 'text',
+    //     items: section.items
+    //   };
     default:
       section.items.reduce((hash: { [x: string]: number; }, item: { key: string; }) => {
         hash[item.key] = (typeof hash[item.key] === 'number') ? hash[item.key]++ : 0;

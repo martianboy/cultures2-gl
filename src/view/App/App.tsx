@@ -10,7 +10,7 @@ function cancel(e: React.DragEvent<HTMLDivElement>) {
 
 function App() {
   const [fs, setFS] = useState<CulturesFS>();
-  const [customMap, setCustomMap] = useState<CulturesFS>();
+  const [userMap, setUserMap] = useState<CulturesFS>();
 
   async function load_object_file(file: File) {
     const fs = await load_fs(file);
@@ -19,7 +19,7 @@ function App() {
 
   async function load_custom_map(file: File) {
     const fs = await load_fs(file);
-    setCustomMap(fs);
+    setUserMap(fs);
   }
 
   function onDrop(e: React.DragEvent<HTMLDivElement>) {
@@ -41,7 +41,7 @@ function App() {
   let canvas = null;
 
   if (fs) {
-    canvas = <Game fs={fs} customMap={customMap} />;
+    canvas = <Game libFs={fs} userMap={userMap} />;
   }
 
   return (

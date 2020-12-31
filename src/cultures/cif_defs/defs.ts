@@ -1,3 +1,8 @@
+export const text = {
+  string: 'string[]',
+  stringn: '[number,string]',
+};
+
 export const GfxLandscape = {
   EditName: 'string',
   EditGroups: 'string[]',
@@ -94,3 +99,17 @@ export const transition = {
   GfxCoordsA: 'number[][]',
   GfxCoordsB: 'number[][]',
 };
+
+export const misc_startpositions = {
+  startposition: '[number,number[]]'
+}
+
+export const misc_mapname = {
+  mapnamestringid: 'number',
+  mapdescriptionstringid: 'number'
+}
+
+export const misc_maptype = {
+  maptype: 'number',
+  mapcampaignid: 'number[]'
+}

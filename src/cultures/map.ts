@@ -27,6 +27,7 @@ export interface CulturesMapData {
   landscape_objects(): IterableIterator<{ i: number; type: number; level: number }>;
   landscape_levels: Uint8Array;
   landscape_types: Uint16Array;
+  landscape_job_types: Uint8Array;
 
   sections: Record<keyof typeof parsers, IMapDataSection>;
 }
@@ -155,6 +156,7 @@ export async function read_map_data(blob: Blob): Promise<CulturesMapData> {
       }
     },
 
+    landscape_job_types: sections.hoixtlml.content.data,
     landscape_types: sections.hoixalme.content.data,
     landscape_levels: sections.hoixvlml.content.data,
 
