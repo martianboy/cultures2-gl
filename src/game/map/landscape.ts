@@ -1,3 +1,4 @@
+import chunk from 'lodash-es/chunk';
 import { SequentialDataView } from "../../utils/dataview";
 
 import { CulturesMapData } from "../../cultures/map";
@@ -84,7 +85,7 @@ function init_program(gl: WebGL2RenderingContext): IProgram {
   };
 }
 
-export class MapLandscape implements MapLayer {
+class LandscapeRenderer implements MapLayer {
   private vao: WebGLVertexArrayObject | null;
   private buffers?: Buffers;
   private gl_buffers: GlBuffers = {};
@@ -103,6 +104,7 @@ export class MapLandscape implements MapLayer {
   private objects: { i: number; type: number; level: number; frame?: number; }[] = [];
 
   constructor(
+    private bmds: string[],
     private map: CulturesMapData,
     private gl: WebGL2RenderingContext,
     private rm: CulturesResourceManager,
@@ -118,7 +120,7 @@ export class MapLandscape implements MapLayer {
       paths_index,
       layers_index,
       palettes_index
-    } = await this.rm.load_landscape_bmd();
+    } = await this.rm.load_landscape_bmd(this.bmds);
     const view = new SequentialDataView(buf.buffer);
 
     console.time('landscape#load_texture');
@@ -278,35 +280,14 @@ export class MapLandscape implements MapLayer {
     }
 
     this.initial_draw = true;
-
-    this.animation_timer = setTimeout(this.tick, 60);
   }
 
   async initialize() {
     this.gl.bindVertexArray(this.vao);
     await this.load_texture();
 
-    this.animation_timer = setTimeout(this.tick, 60);
-
     console.time('landscape#initialize');
     // if (this.paths_index) this.gl.uniform1iv(this.program.uniform_locations.u_textures, Object.values(this.paths_index).slice(0, 16));
-    const ENABLED_BMDS = [
-      "ls_meadows.bmd",
-      "ls_trees.bmd",
-      "ls_ground.bmd",
-      "ls_harbour.bmd",
-      "ls_bridge.bmd",
-      "ls_chest.bmd",
-      "ls_goods.bmd",
-      "ls_mushrooms.bmd",
-      "ls_trees_dead.bmd",
-      "ls_stonehenge.bmd",
-      "ls_statues.bmd",
-      "ls_water.bmd",
-      "ls_misc.bmd",
-      "ls_caves.bmd",
-      "ls_beduines.bmd",
-    ];
 
     const brightness_at = (x: number, y: number): number => {
       const br = this.map.lighting;
@@ -333,7 +314,7 @@ export class MapLandscape implements MapLayer {
 
     this.objects = Array.from(this.map.landscape_objects()).filter(({ type }) => {
       let lnd = this.rm.registry.landscapes.get(this.map.landscape_index[type]);
-      return (lnd && ENABLED_BMDS.some(p => lnd!.GfxBobLibs.bmd.endsWith(p)))
+      return (lnd && this.bmds.some(p => lnd!.GfxBobLibs.bmd.endsWith(p)))
     });
 
     this.landscape_count = this.objects.length;
@@ -449,5 +430,61 @@ export class MapLandscape implements MapLayer {
     this.bind_textures();
 
     this.gl.drawArrays(this.gl.TRIANGLES, 0, 6 * this.landscape_count);
+  }
+}
+
+export class MapLandscape {
+  bmds = [
+    "ls_meadows.bmd",
+    "ls_trees.bmd",
+    "ls_ground.bmd",
+    "ls_harbour.bmd",
+    "ls_bridge.bmd",
+    "ls_chest.bmd",
+    "ls_goods.bmd",
+    "ls_mushrooms.bmd",
+    "ls_trees_dead.bmd",
+    "ls_stonehenge.bmd",
+    "ls_statues.bmd",
+    "ls_water.bmd",
+    "ls_misc.bmd",
+    "ls_caves.bmd",
+    "ls_beduines.bmd",
+    "ls_ruin_frank.bmd",
+    "ls_smoke.bmd",
+    "ls_shipwrecks.bmd",
+    "ls_skeletons.bmd",
+    "ls_ruin_saracen.bmd",
+    "ls_ruin_byzantine.bmd",
+  ];
+
+  private layers: LandscapeRenderer[]
+
+  constructor(
+    map: CulturesMapData,
+    gl: WebGL2RenderingContext,
+    rm: CulturesResourceManager,
+    geometry: MapGeometry
+  ) {
+    const chunks = chunk(this.bmds, 16);
+    this.layers = chunks.map(bmds => new LandscapeRenderer(bmds, map, gl, rm, geometry));
+  }
+
+  public async initialize() {
+    for (const layer of this.layers) {
+      await layer.initialize();
+    }
+  }
+
+  public tick() {
+    for (const layer of this.layers) {
+      layer.tick();
+    }
+  }
+
+  public render() {
+    for (const layer of this.layers) {
+      layer.render();
+    }
   }
 }

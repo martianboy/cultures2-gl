@@ -36,29 +36,12 @@ export class CulturesResourceManager {
     return img_p;
   }
 
-  async load_landscape_bmd() {
+  async load_landscape_bmd(bmds: string[]) {
     const { create_bmd_texture_array } = await import('cultures2-wasm');
 
     console.time('load_landscape_bmd');
 
-    const ENABLED_BMDS = [
-      "ls_meadows.bmd",
-      "ls_trees.bmd",
-      "ls_ground.bmd",
-      "ls_harbour.bmd",
-      "ls_bridge.bmd",
-      "ls_chest.bmd",
-      "ls_goods.bmd",
-      "ls_mushrooms.bmd",
-      "ls_trees_dead.bmd",
-      "ls_stonehenge.bmd",
-      "ls_statues.bmd",
-      "ls_water.bmd",
-      "ls_misc.bmd",
-      "ls_caves.bmd",
-      "ls_beduines.bmd",
-    ];
-    const landscapes = Array.from(this.registry.landscapes.values()).filter(lnd => ENABLED_BMDS.some(p => lnd.GfxBobLibs.bmd.endsWith(p)));
+    const landscapes = Array.from(this.registry.landscapes.values()).filter(lnd => bmds.some(p => lnd.GfxBobLibs.bmd.endsWith(p)));
     const paths = uniqBy(landscapes.map(p => p.GfxBobLibs), p => p.bmd);
     // @ts-ignore
     const paths_index: Record<string, number> = Object.fromEntries(Object.entries(paths).map(([k, v]) => [v.bmd, parseInt(k)]));

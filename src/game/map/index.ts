@@ -48,6 +48,13 @@ export class CulturesMap {
     await this.landscape.initialize();
 
     this.translate(0, 0);
+
+    setTimeout(this.tick, 60);
+  }
+
+  tick = () => {
+    this.landscape.tick();
+    setTimeout(this.tick, 60);
   }
 
   attachBehaviors() {
