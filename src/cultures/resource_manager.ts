@@ -131,18 +131,6 @@ export class CulturesResourceManager {
       }
     }));
 
-    await Promise.all(paths.map(async (path, i) => {
-      const blob = this.fs.open(path.bmd);
-      const bmd_buf = await read_file(blob);
-      buf.set(new Uint8Array(bmd_buf), bmd_tables.index[i]);
-
-      if (path.shadow) {
-        const shadow = this.fs.open(path.shadow);
-        const shadow_buf = await read_file(shadow);
-        buf.set(new Uint8Array(shadow_buf), bmd_tables.index[i] + bmd_buf.byteLength);
-      }
-    }));
-
     const palettes_buf = new Uint8Array(palette_tables.acc_length);
 
     await Promise.all(palette_paths.map(async (path, i) => {
