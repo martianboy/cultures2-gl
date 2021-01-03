@@ -13,15 +13,15 @@ module.exports = {
   },
 
   experiments: {
-    // asyncWebAssembly: true,
-    syncWebAssembly: true,
+    asyncWebAssembly: true,
+    // syncWebAssembly: true,
   },
 
   module: {
     rules: [
       {
         test: /\.wasm$/,
-        type: "webassembly/sync"
+        type: "webassembly/async",
       },
       {
         test: /\.tsx?$/,
